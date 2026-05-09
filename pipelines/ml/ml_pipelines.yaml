@@ -1,0 +1,38 @@
+ml_pipelines:
+  # ── Master Orchestrator (run this one!)
+  - name: pipeline_start
+    dag_id: ml_pipeline_start
+    schedule: null
+    description: "Master orchestrator - triggers all ML pipelines in order"
+    type: orchestrator
+
+  # ── The actual ML pipelines (in execution order)
+  - name: ingest_features
+    dag_id: ml_ingest_features
+    schedule: null
+    module: ingest_features.feature_builder
+    description: "Extract raw data and build features"
+
+  - name: train_model
+    dag_id: ml_train_model
+    schedule: null
+    module: train.model_trainer_basic
+    description: "Train ML model"
+
+  - name: evaluate_model
+    dag_id: ml_evaluate_model
+    schedule: null
+    module: evaluate.model_evaluator
+    description: "Evaluate model performance"
+
+  - name: deploy_model
+    dag_id: ml_deploy_model
+    schedule: null
+    module: deploy.model_deployer
+    description: "Deploy model to production"
+
+  - name: batch_predict
+    dag_id: ml_batch_predict
+    schedule: null
+    module: batch_predict.predictor
+    description: "Run batch predictions"
