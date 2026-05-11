@@ -1,4 +1,0 @@
-default_args:
-  owner: etluser
-  retries: 2
-  retry_delay: 5m

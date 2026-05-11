@@ -1,4 +1,0 @@
-env: dev
-postgres:
-  host: localhost
-  database: warehouse_dev
