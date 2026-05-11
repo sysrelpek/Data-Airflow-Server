@@ -1,0 +1,20 @@
+# customer_onboarding.yaml (Exempel på nästa generation)
+
+# 1. Definiera resurserna för den här miljön (Central vs Decentral)
+resources:
+  state_store:
+    type: "redis" # På din lokala server kan detta stå "local_json"
+    connection_id: "redis_main_cluster"
+  message_bus:
+    type: "api_endpoint"
+    url: "https://my-department.com"
+
+# 2. Definiera flödet
+workflow:
+  - id: "process_order"
+    business_module: "services.finance.orders"
+    business_function: "handle_new_order"
+    # Här injicerar vi resurserna in i funktionen!
+    inject:
+      storage: "state_store"
+      notifier: "message_bus"

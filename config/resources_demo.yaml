@@ -9,6 +9,6 @@ def process(payment_data, storage, cache):
 
     # 3. Spara permanent i PostgreSQL
     storage.save_transaction(payment_data)
-
+    
     # 4. Uppdatera Redis-cache för framtida snabba uppslag
     cache.set(payment_data['id'], "processed", expire=3600)
