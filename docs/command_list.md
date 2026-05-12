@@ -10,7 +10,7 @@ This document defines the official commands that Mozart (you) can give to the Or
 ```
 - `github__pull_updated_files` → Pull and show all recently updated files
 
-- `github__pull_updated_file[filepath]` → Pull and show the latest version of one specific file
+- `github__pull_updated_file[filepath/filename]` → Pull and show the latest version of one specific file
 ```
 
 ### Pushing Files
