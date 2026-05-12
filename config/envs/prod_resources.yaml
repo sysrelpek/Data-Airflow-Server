@@ -1,0 +1,9 @@
+resources:
+  main_db:
+    type: "business_lib.infrastructure.storage.postgres_adapter.PostgresAdapter"
+    resilience:
+      strategy: "circuit_breaker"
+      fail_limit: 5
+    config:
+      # Injected from your server's .env.prod file via the Factory
+      connection_string: "${DATABASE_URL}"

@@ -22,6 +22,22 @@ def store_data(data, storage: StoragePort):
     return len(data)
 
 def verify_storage(expected_count, storage: StoragePort):
-    # Kontrollerar att data faktiskt finns där
-    # (Här kan vi implementera en specifik count-metod i interfacet)
-    return True
+    actual_count = storage.count_all()
+    return actual_count >= expected_count
+
+def store_data(data, storage: StoragePort, logger: LoggingPort):
+    try:
+        for record in data:
+            storage.save(entity_id=str(record.get('id')), data=record)
+
+        logger.info(f"Successfully stored {len(data)} records.")
+        return len(data)
+    except Exception as e:
+        logger.error("Failed to store data", error_details=e)
+        raise
+
+def verify_storage(expected_count, storage: StoragePort, logger: LoggingPort):
+    actual_count = storage.count_all()
+    success = actual_count >= expected_count
+    logger.verify(f"Storage count check (Expected: {expected_count}, Actual: {actual_count})", success)
+    return success

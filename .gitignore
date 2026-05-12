@@ -1,8 +1,10 @@
-.env
+\#.env
+\#.env.dev
+\#.env.prod
 local_db/
 __pycache__/
 *.pyc
 todo.txt
-scripts_dev/sync_to_server.sh
+\#scripts_dev/sync_to_server.sh
 temp_code/
-scripts_dev/
+\#scripts_dev/

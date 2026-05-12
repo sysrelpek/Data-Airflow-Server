@@ -1,0 +1,9 @@
+resources:
+  main_db:
+    type: "business_lib.infrastructure.storage.file_adapter.FileStorageAdapter"
+    config:
+      # Matches the temporary paths used in your Pytest setup
+      base_path: "./local_db/dev_storage"
+
+  system_logger:
+    type: "business_lib.infrastructure.logging.airflow_adapter.AirflowLoggerAdapter"

@@ -18,6 +18,7 @@ steps:
     depends_on: ["process"]
     inject:
       storage: "main_db"
+      logger: "system_logger"
 
   - id: "verify"
     business_module: "business_lib.services.ingest.feature_ingest"
@@ -25,3 +26,4 @@ steps:
     depends_on: ["store"]
     inject:
       storage: "main_db"
+      logger: "system_logger"
