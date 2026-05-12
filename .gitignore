@@ -1,0 +1,5 @@
+.env
+local_db/
+__pycache__/
+*.pyc
+todo.txt

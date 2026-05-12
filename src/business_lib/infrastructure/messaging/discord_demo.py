@@ -1,4 +1,4 @@
-# src/business_lib/infrastructure/messaging/discord.py
+# src/business_lib/infrastructure/messaging/discord_demo.py
 
 class DiscordLoggerAdapter(LoggingPort):
     def __init__(self, webhook_url: str, env: str, task_context: dict = None, grok_mode: bool = True):

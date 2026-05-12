@@ -1,4 +1,4 @@
-# src/business_lib/infrastructure/resilience.py
+# src/business_lib/infrastructure/resilience_demo.py
 
 class ResilientStorageWrapper:
     def __init__(self, primary, fallback, limit=5):
