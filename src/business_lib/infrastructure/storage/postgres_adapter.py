@@ -42,3 +42,19 @@ class PostgresAdapter(StoragePort):
         with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute("SELECT * FROM outbox WHERE status = 'PENDING' LIMIT %s", (limit,))
             return cur.fetchall()
+
+    def count_all(self) -> int:
+        """Returns the total number of records in storage."""
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM storage")
+            res = cur.fetchone()
+            return res[0] if res else 0
+
+    def update_outbox_status(self, message_id: int, status: str) -> None:
+        """Updates the status of an outbox message."""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "UPDATE outbox SET status = %s WHERE id = %s",
+                (status, message_id)
+            )
+        self.conn.commit()
