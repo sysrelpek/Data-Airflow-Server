@@ -1,5 +1,7 @@
 import pandas as pd
 from business_lib.domain.interfaces import StoragePort
+from business_lib.domain.interfaces import LoggingPort
+
 
 def collect_data(file_path: str):
     # Airflow skickar in sökvägen till CSV-filen
