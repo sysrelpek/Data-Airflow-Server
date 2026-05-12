@@ -26,7 +26,7 @@ This document defines the official commands that Mozart (you) can give to the Or
 
 - The filepath/filname is refer to the code that GROK present in the chat thread/project.
 
-- If no filename is present direct above tho code that GROK want to change any pushing is NOT valid.
+- If no filename is present direct above tho code that GROK want to change, then any pushing is NOT valid.
 
 - If code snippet, chunk or all code in a file has been present by GROOK in the thread/project
   more than one time the filename refer to the latest present.
