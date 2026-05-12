@@ -2,7 +2,7 @@ SHELL := /bin/bash
 .PHONY: help build restart status clean logs tail-logs
 
 help:
-	@echo "=== PROD Makefile ==="
+	@echo "=== DEV Makefile ==="
 	@echo "  make build     → Build DAGs"
 	@echo "  make restart   → Restart services"
 	@echo "  make status    → Show status"
@@ -13,8 +13,8 @@ help:
 # Safety check
 check-env:
 	@set -a && source ../../.env && set +a && \
-	 if [ "$$ENV" != "prod" ]; then \
-	   echo "❌ ERROR: This Makefile can only run when ENV=prod"; \
+	 if [ "$$ENV" != "dev" ]; then \
+	   echo "❌ ERROR: This Makefile can only run when ENV=dev"; \
 	   exit 1; \
 	 fi
 
@@ -37,5 +37,3 @@ logs:
 tail-logs:
 	sudo journalctl -u airflow.service -f
 
-clean:
-	rm -rf ../../dags/ml/*.py ../../logs/* ../../reporting/*
