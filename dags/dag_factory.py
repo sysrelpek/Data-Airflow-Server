@@ -32,12 +32,12 @@ def task_wrapper(business_module, business_function, inject_map, resources, **co
     # 2. Hämta själva affärsfunktionen
     func = get_class(f"{business_module}.{business_function}")
 
-    # 3. Hantera data-flödet (XCom)
+    # 3. Hantera tmp_db-flödet (XCom)
     # Vi hämtar resultatet från föregående steg om det finns
     ti = context['ti']
     upstream_ids = context['task'].upstream_task_ids
     if upstream_ids:
-        # För enkelhetens skull hämtar vi data från det första uppströms-steget
+        # För enkelhetens skull hämtar vi tmp_db från det första uppströms-steget
         input_data = ti.xcom_pull(task_ids=list(upstream_ids)[0])
         return func(input_data, **injected_resources)
 

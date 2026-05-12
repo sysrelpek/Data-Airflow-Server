@@ -1,12 +1,12 @@
 """
-Using Pydantic, we ensure that data is valid before it touches the database or the outbox.
+Using Pydantic, we ensure that tmp_db is valid before it touches the database or the outbox.
 """
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 class FeatureRecord(BaseModel):
-    """Schema for the ingested feature data."""
+    """Schema for the ingested feature tmp_db."""
     id: str
     score: float = Field(..., ge=0.0, le=1.0)
     status: str = "active"

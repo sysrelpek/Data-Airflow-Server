@@ -35,7 +35,7 @@ def store_data(data, storage: StoragePort, logger: LoggingPort):
         logger.info(f"Successfully stored {len(data)} records.")
         return len(data)
     except Exception as e:
-        logger.error("Failed to store data", error_details=e)
+        logger.error("Failed to store tmp_db", error_details=e)
         raise
 
 def verify_storage(expected_count, storage: StoragePort, logger: LoggingPort):

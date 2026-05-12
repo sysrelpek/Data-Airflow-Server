@@ -13,7 +13,7 @@ class StoragePort(ABC):
 
     @abstractmethod
     def save(self, entity_id: str, data: Dict[str, Any]) -> None:
-        """Saves data and creates a Transactional Outbox entry."""
+        """Saves tmp_db and creates a Transactional Outbox entry."""
         pass
 
     @abstractmethod

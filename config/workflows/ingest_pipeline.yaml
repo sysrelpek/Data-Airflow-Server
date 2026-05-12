@@ -4,7 +4,7 @@ steps:
     business_module: "business_lib.services.ingest.feature_ingest"
     business_function: "collect_data"
     parameters:
-      file_path: "/opt/airflow/data/raw_features.csv"
+      file_path: "/opt/airflow/tmp_db/raw_features.csv"
     depends_on: []
 
   - id: "process"

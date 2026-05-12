@@ -10,13 +10,13 @@ class FileStorageAdapter(StoragePort):
         self.outbox_file = self.path / "outbox.jsonl"
 
     def save(self, entity_id: str, data: dict):
-        # Spara data som JSON-fil
+        # Spara tmp_db som JSON-fil
         file_path = self.path / f"{entity_id}.json"
         file_path.write_text(json.dumps(data, indent=4))
 
         # Simulera Outbox genom att lägga till en rad i en textfil
         with open(self.outbox_file, "a") as f:
-            f.write(json.dumps({"id": entity_id, "data": data}) + "\n")
+            f.write(json.dumps({"id": entity_id, "tmp_db": data}) + "\n")
 
     def get_by_id(self, entity_id: str):
         file_path = self.path / f"{entity_id}.json"
