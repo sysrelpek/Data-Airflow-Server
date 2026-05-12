@@ -1,9 +1,0 @@
-# config/workflows/onboarding.yaml
-steps:
-  - id: "ingest_data"
-    type: "ingestion_service"
-    depends_on: [] # Starts first
-
-  - id: "validate_quality"
-    type: "validation_service"
-    depends_on: ["ingest_data"] # Arrow points from ingest -> validate
