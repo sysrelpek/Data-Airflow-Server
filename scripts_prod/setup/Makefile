@@ -1,41 +1,22 @@
-SHELL := /bin/bash
-.PHONY: help build restart status clean logs tail-logs
+# =============================================
+# Production Makefile - Data Airflow Server
+# =============================================
+
+.PHONY: help setup deploy
 
 help:
-	@echo "=== PROD Makefile ==="
-	@echo "  make build     → Build DAGs"
-	@echo "  make restart   → Restart services"
-	@echo "  make status    → Show status"
-	@echo "  make logs      → Show logs"
-	@echo "  make tail-logs → Follow logs"
-	@echo "  make clean     → Clean generated files"
+	@echo "Available commands:"
+	@echo "  make setup     - Setup production environment on server"
+	@echo "  make deploy    - Deploy updated manifests + configs to server"
 
-# Safety check
-check-env:
-	@set -a && source ../../.env && set +a && \
-	 if [ "$$ENV" != "prod" ]; then \
-	   echo "❌ ERROR: This Makefile can only run when ENV=prod"; \
-	   exit 1; \
-	 fi
+setup:
+	@echo "=== Setting up production environment ==="
+	@ssh ${USER}@${SERVER} 'mkdir -p ${AIRFLOW_HOME}/dags/manifests ${AIRFLOW_HOME}/config'
+	@rsync -avz --delete --exclude-from=scripts_dev/.rsync_exclude . ${USER}@${SERVER}:${AIRFLOW_HOME}/
+	@echo "Production setup completed."
 
-build: check-env
-	@set -a && source ../../.env && set +a && \
-	 source ../../.venv/bin/activate && \
-	 ../../build_dags.sh && \
-	 airflow dags reserialize
-
-restart: check-env
-	@set -a && source ../../.env && set +a && \
-	 ../../restart_airflow_service.sh
-
-status:
-	sudo systemctl status airflow.service --no-pager
-
-logs:
-	sudo journalctl -u airflow.service --no-pager -n 100
-
-tail-logs:
-	sudo journalctl -u airflow.service -f
-
-clean:
-	rm -rf ../../dags/ml/*.py ../../logs/* ../../reporting/*
+deploy:
+	@echo "=== Deploying to production server ==="
+	@rsync -avz --delete --exclude-from=scripts_dev/.rsync_exclude . ${USER}@${SERVER}:${AIRFLOW_HOME}/
+	@ssh ${USER}@${SERVER} 'cd ${AIRFLOW_HOME} && docker compose restart airflow-scheduler airflow-webserver'
+	@echo "Deployment completed - Airflow restarted."
