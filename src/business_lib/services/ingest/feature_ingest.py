@@ -17,15 +17,21 @@ def clean_and_transform(data):
         df['score'] = df['score'] / 100
     return df.to_dict(orient="records")
 
-def store_data(data, storage: StoragePort):
-    # Sparar till Postgres via adaptern
-    for record in data:
-        storage.save(entity_id=str(record.get('id')), data=record)
-    return len(data)
+def store_data(data, storage: StoragePort, logger: LoggingPort):
+    try:
+        for record in data:
+            storage.save(entity_id=str(record.get('id')), data=record)
+        logger.info(f"Successfully stored {len(data)} records.")
+        return len(data)
+    except Exception as e:
+        logger.error("Failed to store data", error_details=e)
+        raise
 
-def verify_storage(expected_count, storage: StoragePort):
+def verify_storage(expected_count, storage: StoragePort, logger: LoggingPort):
     actual_count = storage.count_all()
-    return actual_count >= expected_count
+    success = actual_count >= expected_count
+    logger.verify(f"Storage count check (Expected: {expected_count}, Actual: {actual_count})", success)
+    return success
 
 def store_data(data, storage: StoragePort, logger: LoggingPort):
     try:
