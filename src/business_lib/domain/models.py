@@ -19,3 +19,10 @@ class OutboxMessage(BaseModel):
     payload: dict
     status: str = "PENDING"
     created_at: datetime = Field(default_factory=datetime.now)
+
+class DataRecord(BaseModel):
+    """Schema for the ingested data tmp_db."""
+    id: str
+    value: float = Field(..., ge=0.0)
+    status: str = "active"
+    processed_at: datetime = Field(default_factory=datetime.now)

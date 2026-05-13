@@ -15,7 +15,7 @@ def test_full_yaml_flow_locally(tmp_path):
     # Kör stegen i ordning (som definierat i YAML)
     raw = collect_data(str(csv_file))
     processed = clean_and_transform(raw)
-    count = store_data(processed, storage=mock_storage)
+    count = store_data(processed, storage=mock_storage, logger=None)
 
     assert count == 2
     assert mock_storage.get_by_id("1")["score"] == 0.85

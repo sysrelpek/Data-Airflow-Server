@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 from business_lib.domain.interfaces import StoragePort
 
 
@@ -22,7 +23,37 @@ class FileStorageAdapter(StoragePort):
         file_path = self.path / f"{entity_id}.json"
         return json.loads(file_path.read_text()) if file_path.exists() else None
 
+    def count_all(self) -> int:
+        return len(list(self.path.glob("*.json")))
+
     def get_pending_messages(self, limit=50):
         # Enkel simulering: läser de sista raderna i outbox-filen
         if not self.outbox_file.exists(): return []
         return [{"id": "mock", "payload": "local_data"}]  # Förenklat för test
+
+    def update_outbox_status(self, message_id: int, status: str) -> None:
+        with open(self.outbox_file, "r") as f:
+            lines = f.readlines()
+
+        with open(self.outbox_file, "w") as f:
+            for line in lines:
+                message = json.loads(line)
+                if message["id"] == message_id:
+                    message["status"] = status
+                f.write(json.dumps(message) + "\n")
+
+            f.flush()
+            f.seek(0)
+
+            f.truncate()
+
+        return None
+
+    def store_data(self, data: Dict[str, Any]) -> None:
+        """Saves data to the storage system."""
+        file_path = self.path / f"{data['id']}.json"
+        file_path.write_text(json.dumps(data, indent=4))
+
+
+
+

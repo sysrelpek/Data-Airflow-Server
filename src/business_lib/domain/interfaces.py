@@ -39,6 +39,12 @@ class StoragePort(ABC):
         """Updates the status of an outbox message (e.g., to 'SENT')."""
         pass
 
+    @abstractmethod
+    def store_data(self, data: Dict[str, Any]) -> None:
+        """Saves data to the storage system."""
+        pass
+
+
 
 class CachePort(ABC):
     """Gränssnitt för snabbmeddelanden och cache (Redis/In-memory)"""

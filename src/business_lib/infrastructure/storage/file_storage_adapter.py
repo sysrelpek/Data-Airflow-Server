@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 
-from src.business_lib.ports.storage_port import StoragePort
+from src.business_lib.domain.interfaces import StoragePort
 from src.business_lib.domain.models import DataRecord
 
 
