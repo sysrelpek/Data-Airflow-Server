@@ -17,17 +17,6 @@ Use these as your primary commands.
 
 ---
 
-## Service-Level Commands
-
-| Command                          | Description                                      | Run from |
-|----------------------------------|--------------------------------------------------|----------|
-| `./start_all_services.sh`        | Start only Airflow services                      | system_services/ |
-| `./stop_all_services.sh`         | Stop only Airflow services                       | system_services/ |
-| `./restart_all_services.sh`      | Restart only Airflow services                    | system_services/ |
-| `./status_all_services.sh`       | Detailed status of all services                  | system_services/ |
-
----
-
 ## Setup & Maintenance
 
 | Command                            | Description                                              | Run from |
