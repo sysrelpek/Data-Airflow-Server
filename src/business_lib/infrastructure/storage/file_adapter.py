@@ -8,7 +8,7 @@ class FileStorageAdapter(StoragePort):
     def __init__(self, base_path: str = "./local_db"):
         self.path = Path(base_path)
         self.path.mkdir(exist_ok=True)
-        self.outbox_file = self.path / "outbox.jsonl"
+        self.outbox_file = self.path / "outbox.json"
 
     def save(self, entity_id: str, data: dict):
         # Spara tmp_db som JSON-fil

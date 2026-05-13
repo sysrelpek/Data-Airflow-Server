@@ -40,7 +40,7 @@ class StoragePort(ABC):
         pass
 
     @abstractmethod
-    def store_data(self, data: Dict[str, Any]) -> None:
+    def store_data(self, data: List[Dict[str, Any]]) -> None:
         """Saves data to the storage system."""
         pass
 

@@ -1,0 +1,57 @@
+{
+    "dag_id": "postgres_ingest_v1_dev",
+    "resources": {
+        "main_db": {
+            "type": "business_lib.infrastructure.storage.file_adapter.FileStorageAdapter",
+            "config": {
+                "base_path": "./local_db/dev_storage"
+            }
+        },
+        "system_logger": {
+            "type": "business_lib.infrastructure.logging.airflow_adapter.AirflowLoggerAdapter"
+        }
+    },
+    "workflow": [
+        {
+            "id": "collect",
+            "business_module": "business_lib.services.ingest.feature_ingest",
+            "business_function": "collect_data",
+            "parameters": {
+                "file_path": "/opt/airflow/tmp_db/raw_features.csv"
+            },
+            "depends_on": []
+        },
+        {
+            "id": "process",
+            "business_module": "business_lib.services.ingest.feature_ingest",
+            "business_function": "clean_and_transform",
+            "depends_on": [
+                "collect"
+            ]
+        },
+        {
+            "id": "store",
+            "business_module": "business_lib.services.ingest.feature_ingest",
+            "business_function": "store_data",
+            "depends_on": [
+                "process"
+            ],
+            "inject": {
+                "storage": "main_db",
+                "logger": "system_logger"
+            }
+        },
+        {
+            "id": "verify",
+            "business_module": "business_lib.services.ingest.feature_ingest",
+            "business_function": "verify_storage",
+            "depends_on": [
+                "store"
+            ],
+            "inject": {
+                "storage": "main_db",
+                "logger": "system_logger"
+            }
+        }
+    ]
+}
