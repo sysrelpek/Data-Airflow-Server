@@ -1,0 +1,20 @@
+[Unit]
+Description=Data Airflow Server (Master Service)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=etluser
+Group=etluser
+WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env
+
+ExecStartPre=/bin/bash -c 'source .venv/bin/activate && airflow dags reserialize'
+ExecStart=/bin/bash -c 'source .venv/bin/activate && exec ./run_airflow_foreground.sh'
+
+Restart=always
+RestartSec=10
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

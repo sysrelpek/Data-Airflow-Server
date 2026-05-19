@@ -1,0 +1,17 @@
+[Unit]
+Description=Airflow API Server (Web UI)
+After=network.target airflow-scheduler.service
+Wants=airflow-scheduler.service
+
+[Service]
+Type=simple
+User=etluser
+Group=etluser
+WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env
+ExecStart=/bin/bash -c 'source .venv/bin/activate && airflow api-server'
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

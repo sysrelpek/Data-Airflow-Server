@@ -1,0 +1,18 @@
+[Unit]
+Description=Airflow Scheduler
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=etluser
+Group=etluser
+WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env
+ExecStartPre=/bin/bash -c 'source .venv/bin/activate && airflow dags reserialize'
+ExecStart=/bin/bash -c 'source .venv/bin/activate && airflow scheduler'
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
