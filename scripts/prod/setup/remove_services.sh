@@ -1,46 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# =============================================================================
+# scripts/prod/setup/remove_services.sh
+# Cleanup: stops and removes all systemd services
+# =============================================================================
 
-# ============================================================
-# WARNING: First time running this script on a server
-# ============================================================
-# This script will STOP, DISABLE and DELETE the following services:
-#   - airflow-scheduler.service
-#   - airflow-api.service
-#   - data_airflow_server.service
-#
-# It will ALSO remove the old legacy file:
-#   - airflow.service   (if it still exists)
-#
-# Please review this script before running it the first time.
-# ============================================================
+set -euo pipefail
 
-echo "=============================================="
-echo "   Data Airflow Server - Remove Services"
-echo "=============================================="
-echo ""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd -P)"
 
-SERVICES=("airflow-scheduler.service" "airflow-api.service" "data_airflow_server.service")
+if [ -f "${PROJECT_ROOT}/.env.prod" ]; then
+    set -a
+    source "${PROJECT_ROOT}/.env.prod"
+    set +a
+fi
 
-echo "🛑 Stopping services..."
-for service in "${SERVICES[@]}"; do
-    sudo systemctl stop "$service" 2>/dev/null || true
-done
+echo "🧹 Removing Data Airflow Server systemd services..."
 
-echo "❌ Disabling services..."
-for service in "${SERVICES[@]}"; do
-    sudo systemctl disable "$service" 2>/dev/null || true
-done
-
-echo "🗑️ Removing service files..."
-sudo rm -f /etc/systemd/system/airflow-scheduler.service
-sudo rm -f /etc/systemd/system/airflow-api.service
-sudo rm -f /etc/systemd/system/data_airflow_server.service
-
-# Remove legacy service file (safe to keep)
-sudo rm -f /etc/systemd/system/airflow.service
-
-echo "🔄 Reloading systemd daemon..."
+sudo systemctl stop airflow-webserver airflow-scheduler airflow-worker 2>/dev/null || true
+sudo systemctl disable airflow-webserver airflow-scheduler airflow-worker 2>/dev/null || true
+sudo rm -f /etc/systemd/system/airflow-*.service
 sudo systemctl daemon-reload
 
-echo ""
-echo "✅ All Data Airflow Server services have been removed."
+echo "✅ All services removed."

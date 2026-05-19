@@ -19,8 +19,12 @@ cd Data-Airflow-Server
 cp .env.prod.example .env.prod
 # ← Edit .env.prod (set real passwords, secrets, paths)
 
+
+chmod +x scripts/prod/setup/*.sh scripts/prod/system_services/*.sh
+
 # 3. Run the production setup scripts (will be in scripts/prod/setup/)
 ./scripts/prod/setup/setup_services.sh
+
 
 # 4. Initialize Airflow database (first time only)
 airflow db init
