@@ -4,7 +4,6 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-
 class Settings(BaseSettings):
     # 1. Identify which environment we are in
     ENV: str = os.getenv("ENV", "dev")
@@ -14,16 +13,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = ""
     ADAPTER_TYPE: str = ""
 
-    # Pydantic loads files in the order provided.
-    # We dynamically select the file based on the ENV variable.
+    # Pydantic dynamically selects the exact file based on the ENV variable.
     model_config = SettingsConfigDict(
-        env_file=[
-            str(BASE_DIR / ".env"),  # Load general defaults
-            str(BASE_DIR / f".env.{os.getenv('ENV', 'dev')}")  # Load env-specific overrides
-        ],
+        env_file=str(BASE_DIR / f".env.{os.getenv('ENV', 'dev')}"),
         env_file_encoding='utf-8',
         extra='ignore'
     )
 
 
 settings = Settings()
+

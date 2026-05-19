@@ -1,7 +1,7 @@
 import pytest
 import json
 import os
-from scripts.build_manifest import ManifestFactory
+from scripts_test.build_manifest import ManifestFactory
 
 
 def test_manifest_generation_structure():

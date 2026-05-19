@@ -5,5 +5,5 @@ resources:
       strategy: "circuit_breaker"
       fail_limit: 5
     config:
-      # Injected from your server's .env.prod file via the Factory
+      # Injected from your server's .env.test.prod file via the Factory
       connection_string: "${DATABASE_URL}"

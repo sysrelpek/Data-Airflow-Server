@@ -35,7 +35,7 @@ ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
   sed -i 's/^ENV=.*/ENV=prod/' .env
 "
 
-# Make scripts executable
+# Make scripts_test executable
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
   cd '${REMOTE_DIR}' &&
   chmod +x build_dags.sh run_airflow_service.sh restart_airflow_service.sh 2>/dev/null || true
