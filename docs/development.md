@@ -8,5 +8,6 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 pip install -e .
+chmod +x scripts/dev/sync_to_server.sh
 cp .env.dev.example .env.dev
 # Edit .env.dev
