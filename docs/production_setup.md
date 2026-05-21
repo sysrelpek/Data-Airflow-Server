@@ -16,6 +16,8 @@ cd /home/etluser/ai-projects/data_airflow_server
 chmod +x scripts/prod/admin/*.sh \
         scripts/prod/setup/*.sh \
         scripts/prod/system_services/*.sh
+        scripts/prod/install/tools/*.sh
+        scripts/prod/install/*.sh
 
 # 3. Rebuild all DAGs from the latest manifests
 ./scripts/prod/admin/build_dags.sh
