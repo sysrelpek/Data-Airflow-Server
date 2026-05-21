@@ -1,22 +1,34 @@
-# Production Setup (One-time)
+# Production Setup – Post-Sync ToDo Checklist
 
-This document describes how to set up the Data Airflow Server on the production machine **after** you have run `sync_to_server.sh` from your development machine.
+**Run this checklist after every `sync_to_server.sh` from your development machine.**
 
-## Prerequisites
-- The project code is already on the server (via `sync_to_server.sh`)
-- Server is running Ubuntu/Debian (or compatible Linux)
-- Git, Python 3.11+, PostgreSQL and systemd are installed
-- You are logged in as the `etluser` (or equivalent service user)
+This is the mandatory workflow to make sure the production server is updated correctly.
 
-## Step-by-step setup
+## Post-Sync Checklist (must do)
 
 ```bash
-# 1. Go to the project folder on the server
+# 1. Go to project root on the server
 cd /home/etluser/ai-projects/data_airflow_server
 
-# 2. Make sure all production scripts are executable
-#    (they are overwritten on every sync_to_server.sh)
-chmod +x scripts/prod/admin/*.sh scripts/prod/setup/*.sh scripts/prod/system_services/*.sh
 
-# 3. Run the production setup scripts
-./scripts/prod/setup/setup_services.sh
+# 2. Make all production scripts executable
+#    (they get overwritten by every sync)
+chmod +x scripts/prod/admin/*.sh \
+        scripts/prod/setup/*.sh \
+        scripts/prod/system_services/*.sh
+
+# 3. Rebuild all DAGs from the latest manifests
+./scripts/prod/admin/build_dags.sh
+
+
+# 4. Restart all Airflow services
+#    (so they pick up the new code and DAGs)
+./scripts/prod/system_services/restart_all_services.sh
+# or use the shortcut:
+./scripts/prod/system_services/restart_server.sh
+
+
+# 5. Check that everything is running correctly
+./scripts/prod/system_services/status_all_services.sh
+# or use the shortcut:
+./scripts/prod/system_services/status_server.sh
