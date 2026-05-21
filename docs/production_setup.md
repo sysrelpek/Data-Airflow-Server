@@ -1,6 +1,6 @@
 # Production Setup – Post-Sync ToDo Checklist
 
-**Run this checklist after every `sync_to_server.sh` from your development machine.**
+**Run this checklist after every `sync_to_server.sh`  from your development machine.**
 
 This is the mandatory workflow to make sure the production server is updated correctly.
 
