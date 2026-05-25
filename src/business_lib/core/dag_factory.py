@@ -1,7 +1,7 @@
 # =============================================================================
 # src/business_lib/core/dag_factory.py
 # Pure core logic for creating Airflow DAGs from manifests
-# (Hexagonal - no direct Airflow imports in business logic where possible)
+# (Hexagonal  -  no direct Airflow imports in business logic where possible)
 # =============================================================================
 
 import json

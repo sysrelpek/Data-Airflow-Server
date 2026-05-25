@@ -1,7 +1,7 @@
 # =============================================================================
 # dags/dag_factory.py
 # Airflow entry point - scans manifests and registers DAGs
-# (Thin wrapper only - core logic lives in business_lib)
+# (Thin wrapper only  -  core logic lives in business_lib)
 # =============================================================================
 
 import json
