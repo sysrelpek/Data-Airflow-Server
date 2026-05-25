@@ -1,10 +1,27 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "data_airflow_server"
 version = "0.0.2"
+requires-python = ">=3.11"
 
+# Correct src/ layout
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["business_lib*"]
+
+# Pytest configuration for clean testing with SQLite mock
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--strict-markers --tb=short --maxfail=5"
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
