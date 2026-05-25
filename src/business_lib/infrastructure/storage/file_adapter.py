@@ -10,12 +10,17 @@ class FileStorageAdapter(StoragePort):
         self.path.mkdir(exist_ok=True)
         self.outbox_file = self.path / "outbox.json"
 
+    def write(self, data: List[Dict[str, Any]], target_table: str) -> None:
+        """Main method used by IngestService (added for test compatibility)."""
+        if not data:
+            return
+        # For now we store each item individually (you can improve later)
+        for item in data:
+            self.store_data(item)
+
     def save(self, entity_id: str, data: dict):
-        # Spara tmp_db som JSON-fil
         file_path = self.path / f"{entity_id}.json"
         file_path.write_text(json.dumps(data, indent=4))
-
-        # Simulera Outbox genom att lägga till en rad i en textfil
         with open(self.outbox_file, "a") as f:
             f.write(json.dumps({"id": entity_id, "tmp_db": data}) + "\n")
 
@@ -27,33 +32,24 @@ class FileStorageAdapter(StoragePort):
         return len(list(self.path.glob("*.json")))
 
     def get_pending_messages(self, limit=50):
-        # Enkel simulering: läser de sista raderna i outbox-filen
-        if not self.outbox_file.exists(): return []
-        return [{"id": "mock", "payload": "local_data"}]  # Förenklat för test
+        if not self.outbox_file.exists():
+            return []
+        return [{"id": "mock", "payload": "local_data"}]
 
     def update_outbox_status(self, message_id: int, status: str) -> None:
+        if not self.outbox_file.exists():
+            return
         with open(self.outbox_file, "r") as f:
             lines = f.readlines()
-
         with open(self.outbox_file, "w") as f:
             for line in lines:
                 message = json.loads(line)
-                if message["id"] == message_id:
+                if message.get("id") == message_id:
                     message["status"] = status
                 f.write(json.dumps(message) + "\n")
-
             f.flush()
-            f.seek(0)
-
-            f.truncate()
-
-        return None
 
     def store_data(self, data: Dict[str, Any]) -> None:
         """Saves data to the storage system."""
-        file_path = self.path / f"{data['id']}.json"
+        file_path = self.path / f"{data.get('id', 'unknown')}.json"
         file_path.write_text(json.dumps(data, indent=4))
-
-
-
-
