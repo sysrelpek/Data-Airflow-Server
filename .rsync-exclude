@@ -1,0 +1,47 @@
+cat > .rsync-exclude << 'EOF'
+# =============================================================================
+# .rsync-exclude
+# Files and folders to exclude when syncing to production server
+# =============================================================================
+
+# Python / Environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+htmlcov/
+.coverage
+airflow_home_test/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Documentation (optional - you can remove these lines if you want to sync docs)
+# docs/
+
+# Temporary / Generated
+temp_code/
+*.log
+*.tmp
+
+# Environment files (keep only .env.prod on server)
+.env
+.env.*
+!.env.prod
+
+# Exclude this file
+.rsync-exclude
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
