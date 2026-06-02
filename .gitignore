@@ -9,3 +9,6 @@ todo.txt
 temp_code/
 \#scripts_dev/
 \#src/data_airflow_server.egg-info/
+
+airflow_home_test/
+htmlcov/
