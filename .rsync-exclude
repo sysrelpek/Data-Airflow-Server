@@ -1,7 +1,6 @@
-cat > .rsync-exclude << 'EOF'
 # =============================================================================
 # .rsync-exclude
-# Files and folders to exclude when syncing to production server
+# Only exclude what should NEVER go to the production server
 # =============================================================================
 
 # Python / Environment
@@ -25,23 +24,23 @@ airflow_home_test/
 *.swp
 *.swo
 
-# Documentation (optional - you can remove these lines if you want to sync docs)
-# docs/
-
 # Temporary / Generated
 temp_code/
 *.log
 *.tmp
 
-# Environment files (keep only .env.prod on server)
-.env
-.env.*
-!.env.prod
-
-# Exclude this file
-.rsync-exclude
-
 # OS
 .DS_Store
 Thumbs.db
-EOF
+
+# ============================================
+# Environment files - Only allow .env.prod
+# ============================================
+.env.dev
+.env.test
+
+# Explicitly allow .env.prod to be copied
+!.env.prod
+
+# Do not copy this file itself
+.rsync-exclude
