@@ -10,12 +10,13 @@ cd /path/to/Data-Airflow-Server
 source .venv/bin/activate
 
 # 3. Develop
-#    • Edit manifests in dags/manifests/
+#    • Edit DAG definitions in dags/configs/          (YAML - human friendly)
+#    • Run ./scripts/dev/build_manifest.py            (generates JSON in dags/manifests/)
 #    • Add/edit code in src/business_lib/
 #    • Update tests in tests/
 
-# 4. Test locally (when scripts/test/ is ready)
-#    ./scripts/test/run_tests.sh
+# 4. Test locally
+./scripts/test/run_tests.sh
 
 # 5. Deploy changes to production server
 ./scripts/dev/sync_to_server.sh

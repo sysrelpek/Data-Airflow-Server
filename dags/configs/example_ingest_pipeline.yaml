@@ -1,0 +1,34 @@
+# =============================================================================
+# Example manifest - Ingest Pipeline
+# Location: dags/configs/example_ingest_pipeline.yaml
+# This file is the human-editable source of truth.
+# =============================================================================
+
+dag_id: example_ingest_pipeline
+schedule: "@daily"
+
+resources:
+  main_db:
+    type: business_lib.infrastructure.storage.postgres_adapter.PostgresAdapter
+    config:
+      connection_string: ${DATABASE_URL}
+
+workflow:
+  - id: extract
+    business_module: business_lib.services.extract_service
+    business_function: extract_data
+    depends_on: []
+
+  - id: transform
+    business_module: business_lib.services.transform_service
+    business_function: transform_data
+    depends_on: [extract]
+    inject:
+      storage: main_db
+
+  - id: load
+    business_module: business_lib.services.load_service
+    business_function: load_to_warehouse
+    depends_on: [transform]
+    inject:
+      storage: main_db
