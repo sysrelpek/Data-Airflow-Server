@@ -2,6 +2,7 @@
 # =============================================================================
 # scripts/dev/sync_to_server.sh
 # Sync project from local development machine to production server
+# (More robust version with forced script sync)
 # =============================================================================
 
 set -euo pipefail
@@ -31,36 +32,50 @@ echo "🔄 Syncing project to production server..."
 echo "   Local  → ${PROJECT_ROOT}"
 echo "   Remote → ${REMOTE_DIR}"
 
-# Safety check for exclude file
+# Safety check
 if [ ! -f "${PROJECT_ROOT}/.rsync-exclude" ]; then
     echo "❌ Error: .rsync-exclude file not found in project root!"
     exit 1
 fi
 
-# Create remote directory if it doesn't exist
+# Create remote directory
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "mkdir -p '${REMOTE_DIR}'"
 
-# Perform rsync
-# --ignore-times = always transfer files if content differs (more reliable)
-# --prune-empty-dirs = helps reduce some "cannot delete" warnings
+# ------------------------------------------------------------------------------
+# Pass 1: Normal sync for the whole project
+# ------------------------------------------------------------------------------
+echo "→ Starting main project sync..."
 rsync -az --delete --prune-empty-dirs --ignore-times \
     -e "ssh -p ${SERVER_PORT}" \
     --exclude-from="${PROJECT_ROOT}/.rsync-exclude" \
     "${PROJECT_ROOT}/" \
     "${SERVER_USER}@${SERVER_HOST}:${REMOTE_DIR}/"
 
-echo "✅ Files synced successfully."
+echo "✅ Main sync completed."
 
-# ------------------------------------------------------------
-# Post-sync tasks on the server (made defensive)
-# ------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Pass 2: Forced sync for scripts/ folder (more reliable overwrite)
+# This ensures script changes are always applied even if timestamps match
+# ------------------------------------------------------------------------------
+echo "→ Force syncing scripts/ folder (reliable overwrite)..."
+rsync -avz --ignore-times --checksum \
+    -e "ssh -p ${SERVER_PORT}" \
+    --exclude-from="${PROJECT_ROOT}/.rsync-exclude" \
+    "${PROJECT_ROOT}/scripts/" \
+    "${SERVER_USER}@${SERVER_HOST}:${REMOTE_DIR}/scripts/"
+
+echo "✅ Scripts folder force-synced."
+
+# ------------------------------------------------------------------------------
+# Post-sync tasks on the server
+# ------------------------------------------------------------------------------
 echo "🔧 Running post-sync tasks on server..."
 
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
     set +e
     cd '${REMOTE_DIR}'
 
-    # Set ENV=prod if .env.prod exists
+    # Set ENV=prod
     if [ -f .env.prod ]; then
         sed -i 's/^ENV=.*/ENV=prod/' .env.prod
         echo '   → Set ENV=prod in .env.prod'
@@ -68,11 +83,11 @@ ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
         echo '   ⚠️  .env.prod not found on server yet'
     fi
 
-    # Make production scripts executable
+    # Make scripts executable
     chmod +x scripts/prod/admin/*.sh scripts/prod/system_services/*.sh scripts/prod/install/*.sh 2>/dev/null || true
     echo '   → Made production scripts executable'
 
-    # Install package in editable mode (required for build_dags.sh)
+    # Install package in editable mode
     if [ -f .venv/bin/activate ]; then
         source .venv/bin/activate
         echo '   → Virtual environment activated'
