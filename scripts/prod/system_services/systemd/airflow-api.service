@@ -11,9 +11,12 @@ Type=simple
 User=etluser
 Group=etluser
 WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+
+# Load environment from .env.prod
 EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env.prod
 
-ExecStart=/bin/bash -c 'source /home/etluser/ai-projects/data_airflow_server/.venv/bin/activate && airflow api-server'
+# Start the API server
+ExecStart=/bin/bash -c 'source /home/etluser/ai-projects/data_airflow_server/.venv/bin/activate && airflow api-server --host 0.0.0.0 --port 8080'
 
 Restart=always
 RestartSec=10

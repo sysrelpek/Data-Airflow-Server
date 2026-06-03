@@ -12,6 +12,8 @@ Type=simple
 User=etluser
 Group=etluser
 WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+
+# Load environment from .env.prod
 EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env.prod
 
 ExecStartPre=/bin/bash -c 'source /home/etluser/ai-projects/data_airflow_server/.venv/bin/activate && airflow dags reserialize'
