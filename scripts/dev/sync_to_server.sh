@@ -40,8 +40,10 @@ fi
 # Create remote directory if it doesn't exist
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "mkdir -p '${REMOTE_DIR}'"
 
-# Perform rsync with --prune-empty-dirs to reduce "cannot delete" warnings
-rsync -az --delete --prune-empty-dirs \
+# Perform rsync
+# --ignore-times = always transfer files if content differs (more reliable)
+# --prune-empty-dirs = helps reduce some "cannot delete" warnings
+rsync -az --delete --prune-empty-dirs --ignore-times \
     -e "ssh -p ${SERVER_PORT}" \
     --exclude-from="${PROJECT_ROOT}/.rsync-exclude" \
     "${PROJECT_ROOT}/" \
