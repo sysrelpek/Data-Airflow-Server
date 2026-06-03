@@ -1,6 +1,5 @@
 # =============================================================================
-# scripts/prod/system_services/systemd/airflow-scheduler.service
-# Airflow Scheduler - Clean modern version
+# Airflow Scheduler
 # =============================================================================
 
 [Unit]
@@ -12,12 +11,11 @@ Wants=postgresql.service
 Type=simple
 User=etluser
 Group=etluser
-WorkingDirectory=${PROJECT_ROOT}
-Environment=PROJECT_ROOT=/home/etluser/ai-projects/data_airflow_server
-EnvironmentFile=${PROJECT_ROOT}/.env.prod
+WorkingDirectory=/home/etluser/ai-projects/data_airflow_server
+EnvironmentFile=/home/etluser/ai-projects/data_airflow_server/.env.prod
 
-ExecStartPre=/bin/bash -c 'source .venv/bin/activate && airflow dags reserialize'
-ExecStart=/bin/bash -c 'source .venv/bin/activate && airflow scheduler'
+ExecStartPre=/bin/bash -c 'source /home/etluser/ai-projects/data_airflow_server/.venv/bin/activate && airflow dags reserialize'
+ExecStart=/bin/bash -c 'source /home/etluser/ai-projects/data_airflow_server/.venv/bin/activate && airflow scheduler'
 
 Restart=always
 RestartSec=10

@@ -39,7 +39,7 @@ def sync_outbox_to_central():
 
 with DAG(
         'outbox_relay_worker',
-        schedule_interval='*/5 * * * *',  # Runs every 5 minutes
+        schedule='*/5 * * * *',  # Runs every 5 minutes
         start_date=datetime(2023, 1, 1),
         catchup=False
 ) as dag:

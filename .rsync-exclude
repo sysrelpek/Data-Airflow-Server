@@ -1,6 +1,5 @@
 # =============================================================================
 # .rsync-exclude
-# Only exclude what should NEVER go to the production server
 # =============================================================================
 
 # Python / Environment
@@ -34,13 +33,17 @@ temp_code/
 Thumbs.db
 
 # ============================================
-# Environment files - Only allow .env.prod
+# Environment files
 # ============================================
 .env.dev
 .env.test
-
-# Explicitly allow .env.prod to be copied
 !.env.prod
 
-# Do not copy this file itself
+# Exclude the exclude file itself
 .rsync-exclude
+
+# ============================================
+# Old generated folders (do not sync these)
+# ============================================
+.airflow/
+.airflow/logs/

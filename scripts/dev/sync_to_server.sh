@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/sync_to_server.sh
-# Sync project from local machine to production server
+# Sync project from local development machine to production server
 # =============================================================================
 
 set -euo pipefail
@@ -9,7 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd -P)"
 
-# Load dev environment
+# Load development environment
 if [ -f "${PROJECT_ROOT}/.env.dev" ]; then
     set -a
     source "${PROJECT_ROOT}/.env.dev"
@@ -19,7 +19,7 @@ else
     exit 1
 fi
 
-# Server settings
+# Server connection settings
 SERVER_USER="${SERVER_USER:-etluser}"
 SERVER_HOST="${SERVER_HOST:-192.168.1.218}"
 SERVER_PORT="${SERVER_PORT:-22}"
@@ -31,19 +31,17 @@ echo "🔄 Syncing project to production server..."
 echo "   Local  → ${PROJECT_ROOT}"
 echo "   Remote → ${REMOTE_DIR}"
 
-# Safety check
+# Safety check for exclude file
 if [ ! -f "${PROJECT_ROOT}/.rsync-exclude" ]; then
-    echo "❌ Error: .rsync-exclude not found in project root!"
+    echo "❌ Error: .rsync-exclude file not found in project root!"
     exit 1
 fi
 
-# Create remote directory
+# Create remote directory if it doesn't exist
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "mkdir -p '${REMOTE_DIR}'"
 
-# Sync files
-# Using --delete + exclude file. Old directories that only contain excluded files
-# may still show warnings. We handle them gracefully below.
-rsync -az --delete \
+# Perform rsync with --prune-empty-dirs to reduce "cannot delete" warnings
+rsync -az --delete --prune-empty-dirs \
     -e "ssh -p ${SERVER_PORT}" \
     --exclude-from="${PROJECT_ROOT}/.rsync-exclude" \
     "${PROJECT_ROOT}/" \
@@ -52,28 +50,40 @@ rsync -az --delete \
 echo "✅ Files synced successfully."
 
 # ------------------------------------------------------------
-# Post-sync tasks on the server (made more robust)
+# Post-sync tasks on the server (made defensive)
 # ------------------------------------------------------------
-
 echo "🔧 Running post-sync tasks on server..."
 
 ssh -p "${SERVER_PORT}" "${SERVER_USER}@${SERVER_HOST}" "
     set +e
     cd '${REMOTE_DIR}'
 
-    # Only touch .env.prod if it exists
+    # Set ENV=prod if .env.prod exists
     if [ -f .env.prod ]; then
         sed -i 's/^ENV=.*/ENV=prod/' .env.prod
         echo '   → Set ENV=prod in .env.prod'
     else
-        echo '   ⚠️  .env.prod not found on server (will be created on next sync if it exists locally)'
+        echo '   ⚠️  .env.prod not found on server yet'
     fi
 
-    # Make scripts executable
+    # Make production scripts executable
     chmod +x scripts/prod/admin/*.sh scripts/prod/system_services/*.sh scripts/prod/install/*.sh 2>/dev/null || true
     echo '   → Made production scripts executable'
 
-    # Rebuild DAGs only if the script exists
+    # Install package in editable mode (required for build_dags.sh)
+    if [ -f .venv/bin/activate ]; then
+        source .venv/bin/activate
+        echo '   → Virtual environment activated'
+
+        if [ -f pyproject.toml ]; then
+            pip install -e . --quiet
+            echo '   → Package installed in editable mode'
+        fi
+    else
+        echo '   ⚠️  Virtual environment not found on server'
+    fi
+
+    # Rebuild DAGs
     if [ -x ./scripts/prod/admin/build_dags.sh ]; then
         ./scripts/prod/admin/build_dags.sh
         echo '   → DAGs rebuilt'

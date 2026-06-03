@@ -1,30 +1,64 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/prod/admin/build_dags.sh
-# Rebuild all dynamic DAGs from manifests (main production command)
+# Rebuild all dynamic DAGs from manifests
 # =============================================================================
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd -P)"
+# ------------------------------------------------------------------------------
+# Find project root by searching upward for a marker file
+# ------------------------------------------------------------------------------
+find_project_root() {
+    local dir="$1"
+    while [[ "$dir" != "/" ]]; do
+        if [[ -f "$dir/pyproject.toml" || -d "$dir/.git" ]]; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo "❌ Error: Could not find project root (no pyproject.toml or .git found)"
+    exit 1
+}
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_ROOT="$(find_project_root "$SCRIPT_DIR")"
+
+echo "Starting DAG rebuild..."
+echo "  Script location : ${SCRIPT_DIR}"
+echo "  Project root    : ${PROJECT_ROOT}"
+
+# ------------------------------------------------------------------------------
+# Load .env.prod (non-fatal)
+# ------------------------------------------------------------------------------
 if [ -f "${PROJECT_ROOT}/.env.prod" ]; then
     set -a
     source "${PROJECT_ROOT}/.env.prod"
     set +a
+    echo "  Loaded .env.prod (ENV=${ENV:-not set})"
 else
-    echo "❌ Error: .env.prod not found!"
-    exit 1
+    echo "  ⚠️  .env.prod not found in ${PROJECT_ROOT}"
 fi
 
-echo "🔨 Rebuilding all DAGs from manifests..."
+# ------------------------------------------------------------------------------
+# Activate virtual environment
+# ------------------------------------------------------------------------------
+if [ -f "${PROJECT_ROOT}/.venv/bin/activate" ]; then
+    # shellcheck disable=SC1090
+    source "${PROJECT_ROOT}/.venv/bin/activate"
+    echo "  Virtual environment activated"
+else
+    echo "  ⚠️  Virtual environment not found"
+fi
+
+# ------------------------------------------------------------------------------
+# Rebuild DAGs
+# ------------------------------------------------------------------------------
+echo "Rebuilding DAGs from manifests..."
 cd "${PROJECT_ROOT}"
 
-# Activate virtual environment
-source .venv/bin/activate
-
-# Run the DAG factory (the core of the dynamic DAG system)
 python -m dags.dag_factory
 
-echo "✅ DAGs successfully rebuilt and ready for Airflow scheduler."
+echo ""
+echo "DAGs successfully rebuilt."

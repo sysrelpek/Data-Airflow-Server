@@ -16,5 +16,5 @@ if [ -f "${PROJECT_ROOT}/.env.prod" ]; then
 fi
 
 echo "🚀 Starting all Airflow services..."
-sudo systemctl start airflow-webserver airflow-scheduler
+sudo systemctl start airflow-api.service airflow-scheduler.service
 echo "✅ Services started."

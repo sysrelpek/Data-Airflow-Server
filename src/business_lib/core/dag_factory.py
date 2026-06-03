@@ -6,8 +6,7 @@
 import importlib
 from datetime import datetime
 from airflow import DAG
-from airflow.operators.python import PythonOperator
-
+from airflow.providers.standard.operators.python import PythonOperator
 
 def get_class(path: str):
     """Dynamically import a class or function from a string path."""
