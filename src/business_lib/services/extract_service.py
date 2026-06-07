@@ -1,24 +1,45 @@
 from typing import Any, Dict, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ExtractService:
+    """
+    Service responsible for extracting data in the example pipeline.
+    """
+
     def __init__(self, storage_adapter: Any = None):
         self.storage_adapter = storage_adapter
 
-    def extract_data(self, data: List[dict] = None, **kwargs) -> Dict[str, Any]:
-        print("Running ExtractService.extract_data()...")
+    def extract_data(self, data: Any = None, **kwargs) -> Dict[str, Any]:
+        """
+        Extract data. If no data is provided, returns sample data.
+        """
+        try:
+            if isinstance(data, dict):
+                data = data.get("data", data)
 
-        extracted_data = data or [{"id": 1, "value": "example"}]
+            if not isinstance(data, list) or len(data) == 0:
+                # Return sample data if nothing was provided
+                data = [
+                    {"id": 1, "value": "example_1"},
+                    {"id": 2, "value": "example_2"},
+                ]
+                logger.info("No input data provided. Using sample data.")
 
-        return {
-            "status": "success",
-            "extracted_count": len(extracted_data),
-            "data": extracted_data
-        }
+            logger.info(f"Extracted {len(data)} records")
 
+            return {
+                "status": "success",
+                "extracted_count": len(data),
+                "data": data
+            }
 
-# This is what dag_factory.py is actually looking for
-def extract_data(data: List[dict] = None, **kwargs) -> Dict[str, Any]:
-    """Module-level function that dag_factory calls."""
-    service = ExtractService()
-    return service.extract_data(data=data, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in extract_data: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "data": []
+            }

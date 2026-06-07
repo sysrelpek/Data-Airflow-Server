@@ -1,42 +1,52 @@
 from typing import Any, Dict, List
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TransformService:
     """
-    Transform service for the example_ingest_pipeline.
+    Service responsible for transforming data in the example pipeline.
     """
 
     def __init__(self, storage_adapter: Any = None):
         self.storage_adapter = storage_adapter
 
-    def transform_data(self, data: List[dict] = None, **kwargs) -> Dict[str, Any]:
-        print("Running TransformService.transform_data()...")
+    def transform_data(self, data: Any = None, **kwargs) -> Dict[str, Any]:
+        """
+        Transform incoming data. Adds a 'transformed' flag and uppercases 'value'.
+        """
+        try:
+            if isinstance(data, dict):
+                data = data.get("data", data)
 
-        if not data:
-            data = []
+            if not isinstance(data, list):
+                data = []
 
-        # Simple example transformation
-        transformed = []
-        for item in data:
-            transformed_item = {
-                **item,
-                "transformed": True,
-                "value_upper": str(item.get("value", "")).upper() if "value" in item else None
+            transformed = []
+            for item in data:
+                if isinstance(item, dict):
+                    transformed_item = {
+                        **item,
+                        "transformed": True,
+                        "value_upper": str(item.get("value", "")).upper()
+                    }
+                    transformed.append(transformed_item)
+                else:
+                    transformed.append({"original": item, "transformed": True})
+
+            logger.info(f"Transformed {len(transformed)} records")
+
+            return {
+                "status": "success",
+                "transformed_count": len(transformed),
+                "data": transformed
             }
-            transformed.append(transformed_item)
 
-        return {
-            "status": "success",
-            "transformed_count": len(transformed),
-            "data": transformed
-        }
-
-
-# Module-level function that dag_factory.py calls
-def transform_data(data: List[dict] = None, storage: Any = None, **kwargs) -> Dict[str, Any]:
-    """
-    Entry point called by the DAG factory.
-    `storage` is injected automatically via the `inject` section in the manifest.
-    """
-    service = TransformService(storage_adapter=storage)
-    return service.transform_data(data=data, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in transform_data: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "data": []
+            }

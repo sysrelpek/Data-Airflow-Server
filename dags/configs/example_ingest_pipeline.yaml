@@ -3,7 +3,6 @@
 # Location: dags/configs/example_ingest_pipeline.yaml
 # This file is the human-editable source of truth.
 # =============================================================================
-
 dag_id: example_ingest_pipeline
 schedule: "@daily"
 
@@ -16,19 +15,21 @@ resources:
 workflow:
   - id: extract
     business_module: business_lib.services.extract_service
-    business_function: extract_data
+    business_function: ExtractService.extract_data
     depends_on: []
+    inject:
+      storage: storage
 
   - id: transform
     business_module: business_lib.services.transform_service
-    business_function: transform_data
+    business_function: TransformService.transform_data
     depends_on: [extract]
     inject:
       storage: storage
 
   - id: load
     business_module: business_lib.services.load_service
-    business_function: load_to_warehouse
+    business_function: LoadService.load_to_warehouse
     depends_on: [transform]
     inject:
       storage: storage

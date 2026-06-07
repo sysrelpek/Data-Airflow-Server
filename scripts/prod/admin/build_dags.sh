@@ -1,64 +1,36 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/prod/admin/build_dags.sh
-# Rebuild all dynamic DAGs from manifests
+# Rebuild all dynamic DAGs from YAML manifests
 # =============================================================================
 
 set -euo pipefail
 
-# ------------------------------------------------------------------------------
-# Find project root by searching upward for a marker file
-# ------------------------------------------------------------------------------
-find_project_root() {
-    local dir="$1"
-    while [[ "$dir" != "/" ]]; do
-        if [[ -f "$dir/pyproject.toml" || -d "$dir/.git" ]]; then
-            echo "$dir"
-            return 0
-        fi
-        dir="$(dirname "$dir")"
-    done
-    echo "❌ Error: Could not find project root (no pyproject.toml or .git found)"
-    exit 1
-}
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-PROJECT_ROOT="$(find_project_root "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd -P)"
 
-echo "Starting DAG rebuild..."
-echo "  Script location : ${SCRIPT_DIR}"
-echo "  Project root    : ${PROJECT_ROOT}"
-
-# ------------------------------------------------------------------------------
-# Load .env.prod (non-fatal)
-# ------------------------------------------------------------------------------
 if [ -f "${PROJECT_ROOT}/.env.prod" ]; then
     set -a
     source "${PROJECT_ROOT}/.env.prod"
     set +a
-    echo "  Loaded .env.prod (ENV=${ENV:-not set})"
-else
-    echo "  ⚠️  .env.prod not found in ${PROJECT_ROOT}"
 fi
 
-# ------------------------------------------------------------------------------
-# Activate virtual environment
-# ------------------------------------------------------------------------------
-if [ -f "${PROJECT_ROOT}/.venv/bin/activate" ]; then
-    # shellcheck disable=SC1090
-    source "${PROJECT_ROOT}/.venv/bin/activate"
-    echo "  Virtual environment activated"
-else
-    echo "  ⚠️  Virtual environment not found"
+# Use full path to Python from the virtual environment
+PYTHON_BIN="${PROJECT_ROOT}/.venv/bin/python"
+
+if [ ! -f "$PYTHON_BIN" ]; then
+    echo "❌ Error: Virtual environment Python not found at $PYTHON_BIN"
+    exit 1
 fi
 
-# ------------------------------------------------------------------------------
-# Rebuild DAGs
-# ------------------------------------------------------------------------------
-echo "Rebuilding DAGs from manifests..."
-cd "${PROJECT_ROOT}"
-
-python -m dags.dag_factory
+echo "🔨 Building JSON manifests from YAML configs..."
+"$PYTHON_BIN" -m business_lib.core.build_all_manifests
 
 echo ""
-echo "DAGs successfully rebuilt."
+echo "🚀 Rebuilding all DAGs from manifests..."
+cd "${PROJECT_ROOT}"
+
+"$PYTHON_BIN" -m dags.dag_factory
+
+echo ""
+echo "✅ DAGs successfully rebuilt."

@@ -3,7 +3,9 @@
 # Pure core logic for creating Airflow DAGs from manifests
 # =============================================================================
 
+from typing import Any, Dict, List, Optional
 import importlib
+from pathlib import Path
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
@@ -14,24 +16,74 @@ def get_class(path: str):
     module = importlib.import_module(module_path)
     return getattr(module, attr_name)
 
+def task_wrapper(
+    business_module: str,
+    business_function: str,
+    inject_map: dict = None,
+    resources: dict = None,
+    data: Any = None,
+    **kwargs
+) -> Any:
+    """
+    Universal task wrapper used by all dynamic DAGs.
+    Supports both:
+      - Module-level functions (old style)
+      - Class methods (new recommended style, e.g. ExtractService.extract_data)
+    """
+    inject_map = inject_map or {}
+    resources = resources or {}
 
-def task_wrapper(business_module: str, business_function: str, inject_map: dict, resources: dict, **context):
-    """Bridge that runs inside Airflow worker."""
     injected_resources = {}
+
+    # ============================================================
+    # 1. Handle resource injection (storage, cache, etc.)
+    # ============================================================
     for arg_name, res_id in inject_map.items():
-        res_cfg = resources[res_id]
-        AdapterClass = get_class(res_cfg["type"])
-        injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
+        if res_id in resources:
+            res_cfg = resources[res_id]
+            try:
+                AdapterClass = get_class(res_cfg["type"])
+                injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
+            except Exception as e:
+                raise RuntimeError(f"Failed to instantiate resource '{res_id}': {e}") from e
 
-    func = get_class(f"{business_module}.{business_function}")
+    # Merge injected resources into kwargs
+    call_kwargs = {**kwargs, **injected_resources}
 
-    ti = context['ti']
-    upstream_ids = context['task'].upstream_task_ids
-    if upstream_ids:
-        input_data = ti.xcom_pull(task_ids=list(upstream_ids)[0])
-        return func(input_data, **injected_resources)
+    # If previous task data is available, pass it
+    if data is not None:
+        call_kwargs["data"] = data
 
-    return func(**injected_resources)
+    # ============================================================
+    # 2. Load the target function or class method
+    # ============================================================
+    if "." in business_function:
+        # Class-based style: "ExtractService.extract_data"
+        class_name, method_name = business_function.split(".", 1)
+        ServiceClass = get_class(f"{business_module}.{class_name}")
+
+        # Instantiate the service class with injected dependencies
+        try:
+            service_instance = ServiceClass(**injected_resources)
+        except TypeError as e:
+            # Fallback if the class doesn't accept the injected args in __init__
+            service_instance = ServiceClass()
+
+        # Get the method from the instance
+        func = getattr(service_instance, method_name)
+    else:
+        # Old module-level function style
+        func = get_class(f"{business_module}.{business_function}")
+
+    # ============================================================
+    # 3. Execute the function/method
+    # ============================================================
+    try:
+        result = func(**call_kwargs)
+        return result
+    except Exception as e:
+        print(f"Error executing {business_module}.{business_function}: {e}")
+        raise
 
 
 def create_dag_from_manifest(manifest_config: dict):
