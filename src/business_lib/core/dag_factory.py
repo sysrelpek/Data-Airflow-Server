@@ -21,70 +21,53 @@ def task_wrapper(
     business_function: str,
     inject_map: dict = None,
     resources: dict = None,
-    data: Any = None,
-    **kwargs
+    depends_on: list = None,
+    **context
 ) -> Any:
     """
-    Universal task wrapper used by all dynamic DAGs.
-    Supports both:
-      - Module-level functions (old style)
-      - Class methods (new recommended style, e.g. ExtractService.extract_data)
+    Universal task wrapper with proper XCom data passing between dependent tasks.
     """
+    ti = context.get("ti")
     inject_map = inject_map or {}
     resources = resources or {}
+    depends_on = depends_on or []
 
     injected_resources = {}
 
-    # ============================================================
-    # 1. Handle resource injection (storage, cache, etc.)
-    # ============================================================
+    # 1. Inject resources (storage, etc.)
     for arg_name, res_id in inject_map.items():
         if res_id in resources:
             res_cfg = resources[res_id]
-            try:
-                AdapterClass = get_class(res_cfg["type"])
-                injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
-            except Exception as e:
-                raise RuntimeError(f"Failed to instantiate resource '{res_id}': {e}") from e
+            AdapterClass = get_class(res_cfg["type"])
+            injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
 
-    # Merge injected resources into kwargs
-    call_kwargs = {**kwargs, **injected_resources}
+    # 2. Pull data from upstream task via XCom (if this task depends on others)
+    data = None
+    if depends_on and ti:
+        upstream_task_id = depends_on[-1]  # take the last upstream task
+        data = ti.xcom_pull(task_ids=upstream_task_id, key="return_value")
 
-    # If previous task data is available, pass it
+    call_kwargs = {**injected_resources}
     if data is not None:
         call_kwargs["data"] = data
 
-    # ============================================================
-    # 2. Load the target function or class method
-    # ============================================================
+    # 3. Load and execute the target (class method or function)
     if "." in business_function:
-        # Class-based style: "ExtractService.extract_data"
         class_name, method_name = business_function.split(".", 1)
         ServiceClass = get_class(f"{business_module}.{class_name}")
-
-        # Instantiate the service class with injected dependencies
-        try:
-            service_instance = ServiceClass(**injected_resources)
-        except TypeError as e:
-            # Fallback if the class doesn't accept the injected args in __init__
-            service_instance = ServiceClass()
-
-        # Get the method from the instance
+        service_instance = ServiceClass(**injected_resources)
         func = getattr(service_instance, method_name)
     else:
-        # Old module-level function style
         func = get_class(f"{business_module}.{business_function}")
 
-    # ============================================================
-    # 3. Execute the function/method
-    # ============================================================
-    try:
-        result = func(**call_kwargs)
-        return result
-    except Exception as e:
-        print(f"Error executing {business_module}.{business_function}: {e}")
-        raise
+    # 4. Execute
+    result = func(**call_kwargs)
 
+    # 5. Push result to XCom so downstream tasks can use it
+    if ti:
+        ti.xcom_push(key="return_value", value=result)
+
+    return result
 
 def create_dag_from_manifest(manifest_config: dict):
     """Core function: Creates a complete Airflow DAG from a manifest."""

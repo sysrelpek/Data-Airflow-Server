@@ -40,4 +40,5 @@ set +a
 # Logs & monitoring
 Airflow web UI: http://192.168.1.218:8080 (as configured in .env.prod)
 Logs are in ${AIRFLOW_HOME}/logs/
-Systemd logs: journalctl -u airflow-webserver -f or journalctl -u airflow-scheduler -f
+# Systemd logs 
+journalctl -u airflow-webserver -f or journalctl -u airflow-scheduler -f

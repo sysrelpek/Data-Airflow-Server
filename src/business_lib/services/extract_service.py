@@ -9,8 +9,8 @@ class ExtractService:
     Service responsible for extracting data in the example pipeline.
     """
 
-    def __init__(self, storage_adapter: Any = None):
-        self.storage_adapter = storage_adapter
+    def __init__(self, storage: Any = None):
+        self.storage = storage
 
     def extract_data(self, data: Any = None, **kwargs) -> Dict[str, Any]:
         """

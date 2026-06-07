@@ -9,32 +9,38 @@ class LoadService:
     Service responsible for loading data into storage/warehouse.
     """
 
-    def __init__(self, storage_adapter: Any = None):
-        self.storage_adapter = storage_adapter
+    def __init__(self, storage: Any = None):
+        self.storage = storage
+
 
     def load_to_warehouse(self, data: Any = None, **kwargs) -> Dict[str, Any]:
         """
         Load data into storage using the injected storage adapter.
         """
+        print(f"DEBUG - type of data received: {type(data)}, value preview: {str(data)[:300]}")
         try:
+            # Robust data extraction from previous task result
             if isinstance(data, dict):
-                data = data.get("data", data)
+                if "data" in data:
+                    data = data["data"]
+                else:
+                    data = []
 
             if not isinstance(data, list):
                 data = []
 
             loaded_count = 0
 
-            if self.storage_adapter:
+            if self.storage:
                 for item in data:
                     if isinstance(item, dict):
                         entity_id = str(item.get("id", hash(str(item))))
-                        self.storage_adapter.save(entity_id, item)
+                        self.storage.save(entity_id, item)
                         loaded_count += 1
             else:
                 logger.warning("No storage adapter provided. Data not persisted.")
 
-            logger.info(f"Loaded {loaded_count} records to storage")
+            logger.info(f"Loaded records to storage: {loaded_count}")
 
             return {
                 "status": "success",
