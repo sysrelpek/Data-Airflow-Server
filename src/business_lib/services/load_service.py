@@ -6,25 +6,19 @@ logger = logging.getLogger(__name__)
 
 class LoadService:
     """
-    Service responsible for loading data into storage/warehouse.
+    Responsible for loading transformed data into the target system (warehouse/storage).
     """
 
     def __init__(self, storage: Any = None):
         self.storage = storage
 
-
     def load_to_warehouse(self, data: Any = None, **kwargs) -> Dict[str, Any]:
         """
-        Load data into storage using the injected storage adapter.
+        Persist data using the injected storage adapter.
         """
-        print(f"DEBUG - type of data received: {type(data)}, value preview: {str(data)[:300]}")
         try:
-            # Robust data extraction from previous task result
-            if isinstance(data, dict):
-                if "data" in data:
-                    data = data["data"]
-                else:
-                    data = []
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
 
             if not isinstance(data, list):
                 data = []
@@ -38,9 +32,9 @@ class LoadService:
                         self.storage.save(entity_id, item)
                         loaded_count += 1
             else:
-                logger.warning("No storage adapter provided. Data not persisted.")
+                logger.warning("No storage adapter was injected. Data will not be persisted.")
 
-            logger.info(f"Loaded records to storage: {loaded_count}")
+            logger.info(f"Loaded {loaded_count} records into storage")
 
             return {
                 "status": "success",
@@ -49,7 +43,7 @@ class LoadService:
             }
 
         except Exception as e:
-            logger.error(f"Error in load_to_warehouse: {e}")
+            logger.exception("Error during data loading")
             return {
                 "status": "error",
                 "message": str(e),

@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class TransformService:
     """
-    Service responsible for transforming data in the example pipeline.
+    Responsible for transforming/cleaning/enriching data.
     """
 
     def __init__(self, storage: Any = None):
@@ -14,26 +14,27 @@ class TransformService:
 
     def transform_data(self, data: Any = None, **kwargs) -> Dict[str, Any]:
         """
-        Transform incoming data. Adds a 'transformed' flag and uppercases 'value'.
+        Transform the data: add flags, normalize values, filter invalid records.
         """
         try:
-            if isinstance(data, dict):
-                data = data.get("data", data)
+            if isinstance(data, dict) and "data" in data:
+                data = data["data"]
 
             if not isinstance(data, list):
                 data = []
 
             transformed = []
             for item in data:
-                if isinstance(item, dict):
-                    transformed_item = {
-                        **item,
-                        "transformed": True,
-                        "value_upper": str(item.get("value", "")).upper()
-                    }
-                    transformed.append(transformed_item)
-                else:
-                    transformed.append({"original": item, "transformed": True})
+                if not isinstance(item, dict):
+                    continue
+
+                transformed_item = {
+                    **item,
+                    "transformed": True,
+                    "value_upper": str(item.get("value", "")).upper(),
+                    "processed_at": "2026-06-07T19:00:00Z"  # example enrichment
+                }
+                transformed.append(transformed_item)
 
             logger.info(f"Transformed {len(transformed)} records")
 
@@ -44,7 +45,7 @@ class TransformService:
             }
 
         except Exception as e:
-            logger.error(f"Error in transform_data: {e}")
+            logger.exception("Error during data transformation")
             return {
                 "status": "error",
                 "message": str(e),
