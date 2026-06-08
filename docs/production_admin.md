@@ -54,6 +54,10 @@ Individual Service Shortcuts
 ./scripts/prod/system_services/status_server.sh
 ./scripts/prod/system_services/restart_server.sh
 ./scripts/prod/system_services/stop_server.sh
+
+sudo systemctl restart airflow-scheduler.service
+sudo systemctl restart airflow-scheduler.service
+
 ```
 
 Running Airflow Manually (Debugging)
