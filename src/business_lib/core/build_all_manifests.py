@@ -12,7 +12,7 @@ Usage:
 from pathlib import Path
 from typing import List
 import json
-import sys
+from datetime import datetime, timezone
 
 # Import from our own core module
 from business_lib.core.manifest_builder import build_manifest
@@ -44,6 +44,17 @@ def build_all_manifests(
     for yaml_file in yaml_files:
         try:
             manifest_dict = build_manifest(yaml_file)
+
+            # Add metadata
+            manifest_dict = {
+                "_meta": {
+                    "source_file": str(yaml_file.name),
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "generated_by": "build_all_manifests.py",
+                    "version": "1.0"
+                },
+                **manifest_dict  # original manifest data comes after metadata
+            }
 
             json_file = manifests_dir / (yaml_file.stem + ".json")
 

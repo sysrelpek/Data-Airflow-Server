@@ -12,3 +12,4 @@ temp_code/
 
 airflow_home_test/
 htmlcov/
+dags/manifests/*.json

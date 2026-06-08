@@ -115,3 +115,12 @@ Start Airflow in debug mode,    ./scripts/prod/admin/run_debug.sh
 View scheduler logs,            journalctl -u airflow-scheduler.service -f
 View API server logs,           journalctl -u airflow-api.service -f
 ```
+---
+## Airflow Web UI
+
+The Airflow web interface is the main way to monitor and manage your DAGs.
+
+**URL:**
+http://<your-server-ip>:8080
+
+Example: http://192.168.1.218:8080
