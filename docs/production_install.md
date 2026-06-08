@@ -12,14 +12,18 @@ This document contains all the **one-time installation tasks** that are only nee
 
 ## First-time initialization steps
 
-```bash
-# 1. Go to the project folder
-cd /home/etluser/ai-projects/data_airflow_server
+---
+### 1. Go to the project folder
+```cd /home/etluser/ai-projects/data_airflow_server```
 
-# 2. Initialize Airflow metadata database (only once)
-airflow db init
+---
+### 2. Initialize Airflow metadata database (only once)
+```airflow db init```
 
-# 3. Create the first admin user (only once)
+---
+### 3. Create the first admin user (only once)
+
+```
 airflow users create \
   --username admin \
   --password admin \
@@ -27,24 +31,32 @@ airflow users create \
   --lastname User \
   --role Admin \
   --email admin@example.com
+```
 
-
-
+---
 ## ReInstallation (If needed)
 
-# 1. cd /home/etluser/ai-projects/data_airflow_server
+1. ``` cd /home/etluser/ai-projects/data_airflow_server```
 
-# 2. ./scripts/prod/install/tools/remove_services.sh
 
-# 3. ./scripts/prod/install/setup_services.sh
+2. ```./scripts/prod/install/tools/remove_services.sh```
 
-# 4. Reload systemd so it reads the new unit files
-sudo systemctl daemon-reload
 
-# 5. Now restart the services
+3. ```./scripts/prod/install/setup_services.sh```
+
+
+4. Reload systemd so it reads the new unit files
+```sudo systemctl daemon-reload```
+
+
+5. Now restart the services
+```
 sudo systemctl restart airflow-api.service
-sudo systemctl restart airflow-scheduler.service
+sudo systemctl restart airflow-scheduler.service 
+```
 
-# 6. Check status
-sudo systemctl status airflow-api.service --no-pager
+6. Check status
+
+```sudo systemctl status airflow-api.service --no-pager
 sudo systemctl status airflow-scheduler.service --no-pager
+```
