@@ -82,3 +82,15 @@ class PostgresAdapter(StoragePort):
         for item in data:
             if isinstance(item, dict):
                 self.insert_record(item)
+
+    def delete_data(self) -> int:
+        """Delete all test data from the table."""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(f"DELETE FROM {self.table_name}")
+                deleted_count = cur.rowcount
+            self.conn.commit()
+            return deleted_count
+        except Exception:
+            self.conn.rollback()
+            return 0

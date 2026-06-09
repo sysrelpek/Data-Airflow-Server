@@ -42,10 +42,17 @@ def task_wrapper(
     data = None
     if depends_on and ti:
         upstream_task_id = depends_on[-1]
-        data = ti.xcom_pull(task_ids=upstream_task_id, key="return_value")
+        upstream_result = ti.xcom_pull(task_ids=upstream_task_id, key="return_value")
+
+        # Smart extraction: if upstream returned a dict with "data" key, use that
+        if isinstance(upstream_result, dict) and "data" in upstream_result:
+            data = upstream_result["data"]
+        else:
+            data = upstream_result
+
 
     # 3. Build call arguments
-    call_kwargs = {**injected_resources}
+    call_kwargs = {}
     if data is not None:
         call_kwargs["data"] = data
 

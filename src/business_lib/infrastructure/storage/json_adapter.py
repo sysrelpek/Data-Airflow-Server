@@ -52,3 +52,16 @@ class JsonAdapter(StoragePort):
         for item in data:
             if isinstance(item, dict):
                 self.insert_record(item)
+
+    def delete_data(self) -> int:
+        """Delete all test data from the JSON file."""
+        if not self.file_path.exists():
+            return 0
+
+        try:
+            data = json.loads(self.file_path.read_text())
+            deleted_count = len(data)
+            self.file_path.write_text("{}")  # Clear the file
+            return deleted_count
+        except Exception:
+            return 0
