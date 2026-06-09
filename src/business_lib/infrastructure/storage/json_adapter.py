@@ -9,10 +9,8 @@ from business_lib.domain.interfaces import StoragePort
 
 class JsonAdapter(StoragePort):
     """
-    JSON file-based storage adapter.
-    The storage path **must** be provided either via:
-    - Constructor parameter `base_path`, or
-    - Environment variable defined in ENV_DEFAULT_PATH
+    JSON file-based storage.
+    Path is controlled via FILE_STORAGE_PATH environment variable.
     """
 
     ENV_DEFAULT_PATH = "FILE_STORAGE_PATH"
@@ -26,11 +24,10 @@ class JsonAdapter(StoragePort):
             path = base_path
         else:
             path = os.getenv(self.ENV_DEFAULT_PATH)
-
             if not path:
                 raise ValueError(
-                    f"JsonAdapter requires a storage path. "
-                    f"Either pass `base_path` or set the environment variable '{self.ENV_DEFAULT_PATH}'."
+                    f"JsonAdapter requires a path. "
+                    f"Set environment variable '{self.ENV_DEFAULT_PATH}' or pass base_path."
                 )
 
         self.path = Path(path)
@@ -39,18 +36,16 @@ class JsonAdapter(StoragePort):
 
     def insert_record(self, data: dict) -> None:
         if not isinstance(data, dict) or "id" not in data:
-            raise ValueError("Data must be a dict and contain an 'id' field")
+            raise ValueError("Data must contain an 'id' field")
 
         existing = {}
         if self.file_path.exists():
             existing = json.loads(self.file_path.read_text())
 
         # Convert UUID to string for JSON
-        record = {}
-        for k, v in data.items():
-            record[k] = str(v) if isinstance(v, uuid.UUID) else v
-
+        record = {k: str(v) if isinstance(v, uuid.UUID) else v for k, v in data.items()}
         existing[data["id"]] = record
+
         self.file_path.write_text(json.dumps(existing, indent=4))
 
     def insert_record_list(self, data: List[Dict[str, Any]]) -> None:
