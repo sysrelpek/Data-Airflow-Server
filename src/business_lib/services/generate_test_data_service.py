@@ -9,9 +9,8 @@ logger = logging.getLogger(__name__)
 
 class GenerateTestDataService:
     """
-    Generates test data based on schema from YAML.
-    - Requires schema (no default)
-    - id can only be: int or uuid
+    Generates test data. Only supports id: int or id: uuid.
+    No 'auto' anymore.
     """
 
     def __init__(self, storage: Any = None):
@@ -32,14 +31,16 @@ class GenerateTestDataService:
         if self.storage:
             try:
                 self.storage.insert_record_list(generated_data)
-                logger.info(f"Inserted {len(generated_data)} records")
+                logger.info(f"Inserted {len(generated_data)} records into storage")
             except Exception as e:
                 logger.error(f"Failed to insert data: {e}")
                 return {"status": "error", "message": str(e)}
 
+        # Return both metadata + the actual data so it can flow via XCom
         return {
             "status": "success",
             "rows_created": len(generated_data),
+            "data": generated_data,  # ← Important: return the actual records
             "schema": schema
         }
 
@@ -57,15 +58,13 @@ class GenerateTestDataService:
     def _generate_value(self, column: str, dtype: str, index: int) -> Any:
         dtype = dtype.lower()
 
-        # Special handling for 'id' column
         if column == "id":
             if dtype == "uuid":
                 return str(uuid.uuid4())
             else:
-                # Default to integer if not uuid
+                # Default to integer
                 return random.randint(1, 1_000_000)
 
-        # Normal types
         if dtype == "integer":
             return random.randint(1, 1_000_000)
         elif dtype == "float":

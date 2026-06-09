@@ -16,34 +16,29 @@ def get_class(path: str):
     module = importlib.import_module(module_path)
     return getattr(module, attr_name)
 
-
 def task_wrapper(
     business_module: str,
     business_function: str,
     inject_map: dict = None,
     resources: dict = None,
     depends_on: list = None,
-    **context
+    **kwargs   # ← This captures rows, schema, etc. from op_kwargs
 ) -> Any:
-    """
-    Universal task wrapper.
-    Now also forwards extra parameters (rows, schema, delay_seconds, etc.)
-    """
-    ti = context.get("ti")
+    ti = kwargs.get("ti")
     inject_map = inject_map or {}
     resources = resources or {}
     depends_on = depends_on or []
 
     injected_resources = {}
 
-    # 1. Inject resources (storage, etc.)
+    # 1. Inject resources
     for arg_name, res_id in inject_map.items():
         if res_id in resources:
             res_cfg = resources[res_id]
             AdapterClass = get_class(res_cfg["type"])
             injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
 
-    # 2. Pull data from upstream task via XCom
+    # 2. Pull data from upstream via XCom
     data = None
     if depends_on and ti:
         upstream_task_id = depends_on[-1]
@@ -54,16 +49,14 @@ def task_wrapper(
     if data is not None:
         call_kwargs["data"] = data
 
-    # === NEW: Forward extra parameters from manifest (rows, schema, etc.) ===
-    # Remove internal keys that should not be passed to the service
-    extra_kwargs = {
-        k: v for k, v in context.items()
-        if k not in ["ti", "task_instance", "dag", "run_id", "dag_run"]
-    }
+    # === NEW: Forward extra parameters (rows, schema, etc.) ===
+    # Remove internal Airflow keys
+    internal_keys = {"ti", "task_instance", "dag", "run_id", "dag_run", "params"}
+    extra_kwargs = {k: v for k, v in kwargs.items() if k not in internal_keys}
     call_kwargs.update(extra_kwargs)
-    # =============================================================================
+    # ============================================================
 
-    # 4. Load and execute target
+    # 4. Load and call the target function/method
     if "." in business_function:
         class_name, method_name = business_function.split(".", 1)
         ServiceClass = get_class(f"{business_module}.{class_name}")
@@ -99,24 +92,33 @@ def create_dag_from_manifest(manifest: dict) -> DAG:
         task_id = step["id"]
         depends_on = step.get("depends_on", [])
 
+        # === NEW: Automatically forward all extra keys (rows, schema, etc.) ===
+        op_kwargs = {
+            "business_module": step["business_module"],
+            "business_function": step["business_function"],
+            "inject_map": step.get("inject", {}),
+            "resources": manifest.get("resources", {}),
+            "depends_on": depends_on,
+        }
+
+        # Add any extra parameters defined in the task (rows, schema, delay_seconds, etc.)
+        reserved_keys = {"id", "business_module", "business_function", "inject", "depends_on"}
+        for key, value in step.items():
+            if key not in reserved_keys:
+                op_kwargs[key] = value
+        # =====================================================================
+
         t = PythonOperator(
             task_id=task_id,
             python_callable=task_wrapper,
-            op_kwargs={
-                "business_module": step["business_module"],
-                "business_function": step["business_function"],
-                "inject_map": step.get("inject", {}),
-                "resources": resources,
-                "depends_on": depends_on,          # ← Important: pass depends_on
-            },
+            op_kwargs=op_kwargs,
             dag=dag,
         )
 
         tasks[task_id] = t
 
-        # Set dependencies
+        # Set task dependencies
         for upstream_id in depends_on:
             if upstream_id in tasks:
                 tasks[upstream_id] >> t
-
     return dag
