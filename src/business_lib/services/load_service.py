@@ -6,16 +6,13 @@ logger = logging.getLogger(__name__)
 
 class LoadService:
     """
-    Responsible for loading transformed data into the target system (warehouse/storage).
+    Loads transformed data into storage using the new StoragePort interface.
     """
 
     def __init__(self, storage: Any = None):
         self.storage = storage
 
     def load_to_warehouse(self, data: Any = None, **kwargs) -> Dict[str, Any]:
-        """
-        Persist data using the injected storage adapter.
-        """
         try:
             if isinstance(data, dict) and "data" in data:
                 data = data["data"]
@@ -28,11 +25,11 @@ class LoadService:
             if self.storage:
                 for item in data:
                     if isinstance(item, dict):
-                        entity_id = str(item.get("id", hash(str(item))))
-                        self.storage.save(entity_id, item)
+                        # No more entity_id — just pass the full dict
+                        self.storage.insert_record(item)
                         loaded_count += 1
             else:
-                logger.warning("No storage adapter was injected. Data will not be persisted.")
+                logger.warning("No storage adapter provided. Data not persisted.")
 
             logger.info(f"Loaded {loaded_count} records into storage")
 
@@ -43,7 +40,7 @@ class LoadService:
             }
 
         except Exception as e:
-            logger.exception("Error during data loading")
+            logger.error(f"Error in load_to_warehouse: {e}")
             return {
                 "status": "error",
                 "message": str(e),
