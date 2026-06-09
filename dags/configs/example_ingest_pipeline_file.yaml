@@ -15,12 +15,19 @@ generate_test_data:
 
 resources:
   storage:
-    type: business_lib.infrastructure.storage.file_adapter.FileStorageAdapter
+    type: business_lib.infrastructure.storage.json_adapter.JsonAdapter
     config:
-      base_path: "./local_db"
+      file_name: "test_data"     # optional, but recommended
 
 workflow:
   - id: generate_test_data
+    rows: 100
+    schema:
+      id: integer
+      name: string
+      created_at: timestamp
+      amount: float
+      is_active: boolean
     business_module: business_lib.services.generate_test_data_service
     business_function: GenerateTestDataService.generate
     depends_on: []

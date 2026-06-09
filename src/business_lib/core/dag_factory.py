@@ -15,6 +15,8 @@ def get_class(path: str):
     module_path, attr_name = path.rsplit(".", 1)
     module = importlib.import_module(module_path)
     return getattr(module, attr_name)
+
+
 def task_wrapper(
     business_module: str,
     business_function: str,
@@ -24,12 +26,8 @@ def task_wrapper(
     **context
 ) -> Any:
     """
-    Universal wrapper for dynamic tasks.
-    Supports:
-      - Class-based tasks (e.g. ExtractService.extract_data)
-      - Module-level functions
-      - Resource injection (storage, etc.)
-      - XCom data passing between dependent tasks
+    Universal task wrapper.
+    Now also forwards extra parameters (rows, schema, delay_seconds, etc.)
     """
     ti = context.get("ti")
     inject_map = inject_map or {}
@@ -38,38 +36,45 @@ def task_wrapper(
 
     injected_resources = {}
 
-    # 1. Inject resources (e.g. storage adapter)
+    # 1. Inject resources (storage, etc.)
     for arg_name, res_id in inject_map.items():
         if res_id in resources:
             res_cfg = resources[res_id]
             AdapterClass = get_class(res_cfg["type"])
             injected_resources[arg_name] = AdapterClass(**res_cfg.get("config", {}))
 
-    # 2. Pull data from the last upstream task via XCom
+    # 2. Pull data from upstream task via XCom
     data = None
     if depends_on and ti:
         upstream_task_id = depends_on[-1]
         data = ti.xcom_pull(task_ids=upstream_task_id, key="return_value")
 
+    # 3. Build call arguments
     call_kwargs = {**injected_resources}
     if data is not None:
         call_kwargs["data"] = data
 
-    # 3. Load the target (class method or function)
+    # === NEW: Forward extra parameters from manifest (rows, schema, etc.) ===
+    # Remove internal keys that should not be passed to the service
+    extra_kwargs = {
+        k: v for k, v in context.items()
+        if k not in ["ti", "task_instance", "dag", "run_id", "dag_run"]
+    }
+    call_kwargs.update(extra_kwargs)
+    # =============================================================================
+
+    # 4. Load and execute target
     if "." in business_function:
-        # Class-based: e.g. "ExtractService.extract_data"
         class_name, method_name = business_function.split(".", 1)
         ServiceClass = get_class(f"{business_module}.{class_name}")
         service_instance = ServiceClass(**injected_resources)
         func = getattr(service_instance, method_name)
     else:
-        # Old style: module-level function
         func = get_class(f"{business_module}.{business_function}")
 
-    # 4. Execute the function/method
     result = func(**call_kwargs)
 
-    # 5. Push result to XCom so downstream tasks can use it
+    # 5. Push result to XCom
     if ti:
         ti.xcom_push(key="return_value", value=result)
 
