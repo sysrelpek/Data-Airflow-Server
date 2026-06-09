@@ -44,7 +44,7 @@ def project_root() -> Path:
 def storage_adapter():
     """Return a FileStorageAdapter (or your SQLite mock adapter)."""
     # Import here so we don't break if the module changes
-    from business_lib.infrastructure.storage.file_adapter import FileStorageAdapter
+    from business_lib.infrastructure.storage.json_adapter import FileStorageAdapter
     return FileStorageAdapter(base_path="tests/tmp_db")
 
 
