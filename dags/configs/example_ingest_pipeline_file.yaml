@@ -1,10 +1,17 @@
 # =============================================================================
-# Example manifest - Ingest Pipeline
-# Location: dags/configs/example_ingest_pipeline.yaml
-# This file is the human-editable source of truth.
+# File-based Ingest Pipeline with Test Data Generation
 # =============================================================================
-dag_id: example_ingest_pipeline
+dag_id: example_ingest_pipeline_file
 schedule: "@daily"
+
+generate_test_data:
+  rows: 100
+  schema:
+    id: integer
+    name: string
+    created_at: timestamp
+    amount: float
+    is_active: boolean
 
 resources:
   storage:
@@ -13,10 +20,17 @@ resources:
       base_path: "./local_db"
 
 workflow:
+  - id: generate_test_data
+    business_module: business_lib.services.generate_test_data_service
+    business_function: GenerateTestDataService.generate
+    depends_on: []
+    inject:
+      storage: storage
+
   - id: extract
     business_module: business_lib.services.extract_service
     business_function: ExtractService.extract_data
-    depends_on: []
+    depends_on: [generate_test_data]
     inject:
       storage: storage
 
@@ -31,5 +45,12 @@ workflow:
     business_module: business_lib.services.load_service
     business_function: LoadService.load_to_warehouse
     depends_on: [transform]
+    inject:
+      storage: storage
+
+  - id: remove_test_data
+    business_module: business_lib.services.remove_test_data_service
+    business_function: RemoveTestDataService.remove
+    depends_on: [load]
     inject:
       storage: storage

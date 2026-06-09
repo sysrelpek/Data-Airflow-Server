@@ -1,5 +1,17 @@
+# =============================================================================
+# PostgreSQL-based Ingest Pipeline with Test Data Generation
+# =============================================================================
 dag_id: example_ingest_pipeline_postgres
 schedule: "@daily"
+
+generate_test_data:
+  rows: 100
+  schema:
+    id: integer
+    name: string
+    created_at: timestamp
+    amount: float
+    is_active: boolean
 
 resources:
   main_db:
@@ -8,10 +20,17 @@ resources:
       connection_string: ${WAREHOUSE_DB_URL}
 
 workflow:
+  - id: generate_test_data
+    business_module: business_lib.services.generate_test_data_service
+    business_function: GenerateTestDataService.generate
+    depends_on: []
+    inject:
+      storage: main_db
+
   - id: extract
     business_module: business_lib.services.extract_service
     business_function: ExtractService.extract_data
-    depends_on: []
+    depends_on: [generate_test_data]
     inject:
       storage: main_db
 
@@ -26,5 +45,12 @@ workflow:
     business_module: business_lib.services.load_service
     business_function: LoadService.load_to_warehouse
     depends_on: [transform]
+    inject:
+      storage: main_db
+
+  - id: remove_test_data
+    business_module: business_lib.services.remove_test_data_service
+    business_function: RemoveTestDataService.remove
+    depends_on: [load]
     inject:
       storage: main_db
