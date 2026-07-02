@@ -1,6 +1,5 @@
 from typing import Any, Dict
 import time
-from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -9,8 +8,8 @@ logger = logging.getLogger(__name__)
 class RemoveTestDataService:
     """
     Removes test data created by GenerateTestDataService.
-    Does NOT know anything about JsonAdapter, Postgres, or files.
-    Only calls the generic delete_data() method on the storage.
+    Only calls the generic delete_data() method on the storage adapter.
+    Does NOT know anything about JsonAdapter, PostgresAdapter, or files.
     """
 
     def __init__(self, storage: Any = None):
@@ -25,10 +24,8 @@ class RemoveTestDataService:
             try:
                 time.sleep(delay_seconds)
 
-                if hasattr(self.storage, "delete_data"):
-                    rows_deleted = self.storage.delete_data()
-                else:
-                    logger.warning("Storage adapter does not support delete_data()")
+                # Directly call delete_data() — guaranteed by StoragePort interface
+                rows_deleted = self.storage.delete_data()
 
                 logger.info(f"Successfully removed {rows_deleted} records")
 
