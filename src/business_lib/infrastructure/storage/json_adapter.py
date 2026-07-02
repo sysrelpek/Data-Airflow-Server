@@ -1,11 +1,12 @@
 import json
 import os
 import uuid
+import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-
 from business_lib.domain.interfaces import StoragePort
 
+logger = logging.getLogger(__name__)
 
 class JsonAdapter(StoragePort):
     """
@@ -56,12 +57,22 @@ class JsonAdapter(StoragePort):
     def delete_data(self) -> int:
         """Delete all test data from the JSON file."""
         if not self.file_path.exists():
+            logger.info("No data file found. Nothing to delete.")
             return 0
 
         try:
+            if self.file_path.stat().st_size == 0:
+                logger.info("Data file is empty. Nothing to delete.")
+                return 0
+
             data = json.loads(self.file_path.read_text())
             deleted_count = len(data)
-            self.file_path.write_text("{}")  # Clear the file
+
+            self.file_path.write_text("{}")  # Clear file content
+
+            logger.info(f"Deleted {deleted_count} records from JSON storage")
             return deleted_count
-        except Exception:
+
+        except Exception as e:
+            logger.error(f"Failed to delete data from JSON file: {e}")
             return 0

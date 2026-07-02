@@ -1,11 +1,11 @@
 import json
 import uuid
+import logging
 from typing import Any, Dict, List, Optional
-
 import psycopg2
-
 from business_lib.domain.interfaces import StoragePort
 
+logger = logging.getLogger(__name__)
 
 class PostgresAdapter(StoragePort):
     """
@@ -84,13 +84,30 @@ class PostgresAdapter(StoragePort):
                 self.insert_record(item)
 
     def delete_data(self) -> int:
-        """Delete all test data from the table."""
+        """Delete all records from the table."""
         try:
             with self.conn.cursor() as cur:
+                cur.execute("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = %s
+                    )
+                """, (self.table_name,))
+
+                table_exists = cur.fetchone()[0]
+
+                if not table_exists:
+                    logger.info(f"Table '{self.table_name}' does not exist. Nothing to delete.")
+                    return 0
+
                 cur.execute(f"DELETE FROM {self.table_name}")
                 deleted_count = cur.rowcount
-            self.conn.commit()
-            return deleted_count
-        except Exception:
+                self.conn.commit()
+
+                logger.info(f"Deleted {deleted_count} records from table '{self.table_name}'")
+                return deleted_count
+
+        except Exception as e:
             self.conn.rollback()
+            logger.error(f"Failed to delete data from PostgreSQL: {e}")
             return 0

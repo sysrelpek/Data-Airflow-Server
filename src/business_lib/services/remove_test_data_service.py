@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 class RemoveTestDataService:
     """
     Removes test data created by GenerateTestDataService.
-    Only calls the generic delete_data() method on the storage adapter.
-    Does NOT know anything about JsonAdapter, PostgresAdapter, or files.
+    Only calls the generic delete_data() method on the storage.
     """
 
     def __init__(self, storage: Any = None):
@@ -24,10 +23,12 @@ class RemoveTestDataService:
             try:
                 time.sleep(delay_seconds)
 
-                # Directly call delete_data() — guaranteed by StoragePort interface
                 rows_deleted = self.storage.delete_data()
 
-                logger.info(f"Successfully removed {rows_deleted} records")
+                if rows_deleted > 0:
+                    logger.info(f"Successfully removed {rows_deleted} records")
+                else:
+                    logger.info("No records were deleted (table/file was empty or did not exist)")
 
             except Exception as e:
                 logger.error(f"Failed to remove test data: {e}")
