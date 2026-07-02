@@ -17,9 +17,11 @@ class JsonAdapter(StoragePort):
     ENV_DEFAULT_PATH = "FILE_STORAGE_PATH"
 
     def __init__(
-        self,
-        base_path: Optional[str] = None,
-        file_name: str = "data"
+            self,
+            base_path: Optional[str] = None,
+            file_name: str = "data",
+            table_name: Optional[str] = None,
+            schema: Optional[Dict[str, str]] = None,
     ):
         if base_path:
             path = base_path

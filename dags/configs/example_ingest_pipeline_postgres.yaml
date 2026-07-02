@@ -12,18 +12,30 @@ generate_test_data:
     created_at: timestamp
     amount: float
     is_active: boolean
+    transformed: boolean      # ← Add this
+    value_upper: string       # ← Add this
 
 resources:
   main_db:
     type: business_lib.infrastructure.storage.postgres_adapter.PostgresAdapter
     config:
       connection_string: ${WAREHOUSE_DB_URL}
+      table_name: test_data
 
 workflow:
   - id: generate_test_data
+    rows: 100
+    schema:
+      id: integer
+      name: string
+      created_at: timestamp
+      amount: float
+      is_active: boolean
+      transformed: boolean
+      value_upper: string
     business_module: business_lib.services.generate_test_data_service
     business_function: GenerateTestDataService.generate
-    depends_on: []
+    depends_on: [ ]
     inject:
       storage: main_db
 
