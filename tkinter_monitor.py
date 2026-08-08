@@ -99,11 +99,12 @@ class DataAirflowMonitor:
             messagebox.showwarning("Connection Error", "Could not connect to FastAPI server.\nIs it still running?")
 
     def run_file_pipeline(self):
-        """Run the pipeline locally (still uses local services for now)"""
+        """Run the pipeline using local services"""
         self.conn_label.config(text="● Running pipeline...", foreground="#3498db")
 
         try:
-            demo_path = "./demo_storage"
+            # Use absolute path so FastAPI can find the data
+            demo_path = "/home/etluser/ai-projects/data_airflow_server/demo_storage"
             os.makedirs(demo_path, exist_ok=True)
 
             storage = JsonAdapter(base_path=demo_path, file_name="demo_run")
@@ -121,7 +122,7 @@ class DataAirflowMonitor:
 
             if result.get("status") == "success":
                 messagebox.showinfo("Success", f"Pipeline completed!\nRecords generated: {result.get('rows_created')}")
-                self.refresh_data()  # Pull fresh data from server after run
+                self.refresh_data()
             else:
                 messagebox.showerror("Error", result.get("message", "Unknown error"))
 
@@ -129,7 +130,6 @@ class DataAirflowMonitor:
             messagebox.showerror("Pipeline Error", str(e))
         finally:
             self.conn_label.config(text="● Connected to Server", foreground="#27ae60")
-
 
 if __name__ == "__main__":
     root = tk.Tk()

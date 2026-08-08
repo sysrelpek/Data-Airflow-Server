@@ -6,7 +6,7 @@ import os
 app = FastAPI(title="Data Airflow Monitor API")
 
 # ====================== CONFIG ======================
-STORAGE_PATH = "./demo_storage"
+STORAGE_PATH = "/home/etluser/ai-projects/data_airflow_server/demo_storage"
 DEMO_FILE = "demo_run.json"
 # ====================================================
 
