@@ -128,3 +128,21 @@ The Airflow web interface is the main way to monitor and manage your DAGs.
 http://<your-server-ip>:8080
 
 Example: http://192.168.1.218:8080
+
+
+---
+## Airflow FastAPI server
+
+Open a new terminal window and run this command to start the FastAPI server
+
+
+```
+ssh username@your-ip-adress
+cd ~/your-project-folder
+source .venv/bin/activate
+uvicorn fastapi_monitor:app --host 0.0.0.0 --port 8000 --reload
+```
+
+If the FastAPI server needs to be restarted after updates then stop it first with:
+```
+Ctrl + C

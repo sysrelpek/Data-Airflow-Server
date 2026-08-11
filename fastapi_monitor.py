@@ -2,6 +2,11 @@ from fastapi import FastAPI
 from datetime import datetime
 import json
 import os
+from typing import Dict, Any
+
+# Import your services
+from src.business_lib.services.generate_test_data_service import GenerateTestDataService
+from src.business_lib.infrastructure.storage.json_adapter import JsonAdapter
 
 app = FastAPI(title="Data Airflow Monitor API")
 
@@ -37,6 +42,31 @@ def get_metrics():
             "records_in_storage": len(data),
             "last_updated": datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat()
         }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/run-pipeline")
+def run_pipeline():
+    """Run the File Pipeline on the server"""
+    try:
+        os.makedirs(STORAGE_PATH, exist_ok=True)
+
+        storage = JsonAdapter(base_path=STORAGE_PATH, file_name="demo_run")
+        gen_service = GenerateTestDataService(storage=storage)
+
+        result = gen_service.generate(
+            rows=50,
+            schema={
+                "id": "integer",
+                "name": "string",
+                "created_at": "timestamp",
+                "amount": "float"
+            }
+        )
+
+        return result
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
